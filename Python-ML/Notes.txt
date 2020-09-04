@@ -1,0 +1,14 @@
+Made the following changes to the review TP file
+*Replaced Metal ion with names of the metals moved labels up
+*Deleted the empty columns
+*fixed references header column
+*moved labels "solvent" and "B/Dynamic"
+*changed "Si/Al" to "Si_Al"
+*changed "B/Dynamic" to "B_Dynamic"
+*changed formatted "C_0" to "C_start"
+*changed formatted "C_end" to "C_end"
+*moved "Adsorbent" to top labels
+*removed the numbered columns
+*removed the units, top columns.
+
+
