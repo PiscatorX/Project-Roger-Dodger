@@ -30,45 +30,20 @@ X_test = sc.transform(X_test)
 
 n_features, n_entries  = X_train.shape
 min_trees =  100
-max_trees =  1000
+max_trees =  2000
 trees_step = 100
+n_jobs  = 4
+print("n_feat\tn_trees\tmae\tmse\tmse\taccuracy")
 
-print("i\tn_trees\tmae\tmse\tmse\taccuracy")
-
-for i  in range(1, n_features + 1):
+for n_feat  in range(1, n_features + 1):
      for n_trees in range(min_trees,  max_trees+trees_step,  trees_step):
-         # regressor = RandomForestRegressor(n_estimators=1000, random_state=0, max_features = i)
-         # regressor.fit(X_train, y_train)
-         # y_pred = regressor.predict(X_test)
-         # mae = metrics.mean_absolute_error(y_test, y_pred)
-         # mse = metrics.mean_squared_error(y_test, y_pred)
-         # rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
-         # # print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
-         # # print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
-         # # print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-         # errors = abs(y_pred - y_test)
-         # mape = 100 * (errors / y_test)
-         # # # Calculate and display accuracy
-         # accuracy = 100 - np.mean(mape)
-         # print("{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(i,mae, mse, rmse, accuracy))
-
-         # model = DecisionTreeRegressor()
-         # # fit the model
-         # model.fit(X, y)
-         # # get importance
-         # importance = model.feature_importances_
-         # # summarize feature importance
-         # for i,v in enumerate(importance):
-         #         print('Feature: %0d, Score: %.5f' % (i,v))
-         # # plot feature importance
-         # pyplot.bar([x for x in range(len(importance))], importance)
-         # pyplot.show()
-
-         # X = zeolite_final.drop(["Capacity"], axis = 1)
-         # X.iloc[:,19]
-
-         # X = zeolite_final.drop(["Capacity"], axis = 1)
-         # feat_importances = pd.Series(model.feature_importances_, index=X.columns)
-         # feat_importances.nlargest(20).plot(kind='barh')
-         # print()
-
+         regressor = RandomForestRegressor(n_estimators=n_trees, random_state=0, max_features = n_feat, n_jobs = n_jobs )
+         regressor.fit(X_train, y_train)
+         y_pred = regressor.predict(X_test)
+         mae = metrics.mean_absolute_error(y_test, y_pred)
+         mse = metrics.mean_squared_error(y_test, y_pred)
+         rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
+         errors = abs(y_pred - y_test)
+         mape = 100 * (errors / y_test)
+         accuracy = 100 - np.mean(mape)
+         print("{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, accuracy))
