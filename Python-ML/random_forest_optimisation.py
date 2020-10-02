@@ -17,7 +17,6 @@ y = zeolite_final.loc[:,"Capacity"].values
 #labels
 X = zeolite_final.drop(["Capacity"], axis = 1).values
 
-
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 #Standardize features by removing the mean and scaling to unit variasnce
@@ -29,43 +28,47 @@ sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
-regressor = RandomForestRegressor(n_estimators=1000, random_state=0)
-#TO DO
-#increase n_estimators
-#run in parallel
+n_features, n_entries  = X_train.shape
+min_trees =  100
+max_trees =  1000
+trees_step = 100
 
-regressor.fit(X_train, y_train)
+print("i\tn_trees\tmae\tmse\tmse\taccuracy")
 
-y_pred = regressor.predict(X_test)
+for i  in range(1, n_features + 1):
+     for n_trees in range(min_trees,  max_trees+trees_step,  trees_step):
+         # regressor = RandomForestRegressor(n_estimators=1000, random_state=0, max_features = i)
+         # regressor.fit(X_train, y_train)
+         # y_pred = regressor.predict(X_test)
+         # mae = metrics.mean_absolute_error(y_test, y_pred)
+         # mse = metrics.mean_squared_error(y_test, y_pred)
+         # rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
+         # # print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
+         # # print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
+         # # print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+         # errors = abs(y_pred - y_test)
+         # mape = 100 * (errors / y_test)
+         # # # Calculate and display accuracy
+         # accuracy = 100 - np.mean(mape)
+         # print("{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(i,mae, mse, rmse, accuracy))
 
-print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
-print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
-print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+         # model = DecisionTreeRegressor()
+         # # fit the model
+         # model.fit(X, y)
+         # # get importance
+         # importance = model.feature_importances_
+         # # summarize feature importance
+         # for i,v in enumerate(importance):
+         #         print('Feature: %0d, Score: %.5f' % (i,v))
+         # # plot feature importance
+         # pyplot.bar([x for x in range(len(importance))], importance)
+         # pyplot.show()
 
-errors = abs(y_pred - y_test)
+         # X = zeolite_final.drop(["Capacity"], axis = 1)
+         # X.iloc[:,19]
 
-mape = 100 * (errors / y_test)
-# Calculate and display accuracy
-accuracy = 100 - np.mean(mape)
-print('Accuracy:', round(accuracy, 2), '%.')
-
-model = DecisionTreeRegressor()
-# fit the model
-model.fit(X, y)
-# get importance
-importance = model.feature_importances_
-# summarize feature importance
-for i,v in enumerate(importance):
-	print('Feature: %0d, Score: %.5f' % (i,v))
-# plot feature importance
-pyplot.bar([x for x in range(len(importance))], importance)
-pyplot.show()
-
-X = zeolite_final.drop(["Capacity"], axis = 1)
-X.iloc[:,19]
-
-X = zeolite_final.drop(["Capacity"], axis = 1)
-feat_importances = pd.Series(model.feature_importances_, index=X.columns)
-feat_importances.nlargest(20).plot(kind='barh')
-
+         # X = zeolite_final.drop(["Capacity"], axis = 1)
+         # feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+         # feat_importances.nlargest(20).plot(kind='barh')
+         # print()
 
