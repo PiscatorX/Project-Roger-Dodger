@@ -31,11 +31,12 @@ X_test = sc.transform(X_test)
 n_features, n_entries  = X_train.shape
 min_trees =  100
 max_trees =  2000
-trees_step = 100
+trees_step = 25
 n_jobs  = 4
-print("n_feat\tn_trees\tmae\tmse\tmse\taccuracy")
+print("n_feat\tn_trees\tmae\tmse\trmse\taccuracy")
 
 for n_feat  in range(1, n_features + 1):
+     print()
      for n_trees in range(min_trees,  max_trees+trees_step,  trees_step):
          regressor = RandomForestRegressor(n_estimators=n_trees, random_state=0, max_features = n_feat, n_jobs = n_jobs )
          regressor.fit(X_train, y_train)
