@@ -17,6 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.layers import Dense
 from tensorflow.keras import Sequential
+import pandas as pd
 from load_data import get_zeo 
 from pandas import read_csv
 from numpy import sqrt
@@ -28,7 +29,11 @@ zeolite_final = get_zeo("/home/drewx/Documents/Project-Roger-Dodger/data/zeolite
 #attributes                                                                                                                                                                            
 y = zeolite_final.loc[:,"Capacity"].values                                                                                                                                             
 #labels                                                                                                                                                                                
-X = zeolite_final.drop(["Capacity"], axis = 1).values                                                                                                                                  
+X = zeolite_final.drop(["Capacity"], axis = 1).values
+
+data  = pd.DataFrame(X)
+data.head()
+data.shape
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2) 
 print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
@@ -40,7 +45,7 @@ sc = StandardScaler()
 #TO DO                                                                                                                                                                                 
 #Compare accuracy with and without scaling                                                                                                                                             
 X_train = sc.fit_transform(X_train)                                                                                                                                                    
-X_test = sc.transform(X_test)       
+X_test = sc.transform(X_test)
 
 n_features =  X_train.shape[1]
 
@@ -55,7 +60,7 @@ model.add(Dense(1))
 #model compilation
 model.compile(optimizer = 'adam', loss = 'mse')
 
-model.fit(X_train,  y_train, epochs = 150, batch_size =  32,  verbose = 1)
+model.fit(X_train,  y_train, epochs = 150, batch_size =  32,  verbose = 0)
 
 error =  model.evaluate(X_test, y_test, verbose = 0)
 
