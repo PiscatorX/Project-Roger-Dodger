@@ -17,12 +17,13 @@ from load_data import get_zeo
 
 zeolite_final = get_zeo("/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv")
 
-sc = StandardScaler()
-zeolite_final = sc.fit_transform(zeolite_final)   
 
-zeolite_data = sc.transform()  
 
-# ?sc.fit_transform
+
+
+zeolite_final = sc.transform(zeolite_final)  
+
+print(zeolite_final)
 
 y = zeolite_final.loc[:,"Capacity"].values                                                                                                                                             
 X = zeolite_final.drop(["Capacity"], axis = 1).values 
