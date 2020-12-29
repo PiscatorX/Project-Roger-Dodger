@@ -55,7 +55,7 @@ def  get_zeo(filename,outfile):
 if  __name__  == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('zeolite_file',help ="sequence file", type=argparse.FileType('r'), default = "/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv")
-    parser.add_argument('-o','--outfile', default = "zeolitex_final.tsv", type=argparse.FileType('r'), required = False)
+    parser.add_argument('-o','--outfile', default = "zeolitex_final.tsv", type=argparse.FileType('w'), required = False)
     args = parser.parse_args()
     get_zeo(args.zeolite_file, args.outfile)
 
