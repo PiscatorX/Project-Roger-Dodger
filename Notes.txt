@@ -5,11 +5,18 @@ Made the following changes to the review TP file
 *moved labels "solvent" and "B/Dynamic"
 *changed "Si/Al" to "Si_Al"
 *changed "B/Dynamic" to "B_Dynamic"
-*renamed "B_Dyanamic" to "Batch dynamic"
+*renamed "B_Dyanamic" to "Batch_Dynamic"
 *changed formatted "C_0" to "C_start"
 *changed formatted "C_end" to "C_end"
-*moved "Adsorbent" to top labels
+*Move oil/adsorbent ratio to top row
+*Renamed "oil/adsorbent ratio" to "Oil_adsorbent_ratio"
+*Moved Temp oC to header
+*Renamed Temp oC to Temp
+*moved "Adsorbent" to header row
 *removed the numbered columns
-*removed the units, top columns.
+*removed the units, top rows of with "Zeolite properties" and "adsorption conditions"
+*remove empty row 3
+
+#Next: File processing using the load_data.py script
 
 
