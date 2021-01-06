@@ -1,6 +1,5 @@
-Made the following changes to the review TP file
+Made the following changes to the review TP excel file
 *Replaced Metal ion with names of the metals moved labels up
-*Deleted the empty columns
 *fixed references header column
 *moved labels "solvent" and "B/Dynamic"
 *changed "Si/Al" to "Si_Al"
@@ -16,7 +15,7 @@ Made the following changes to the review TP file
 *removed the numbered columns
 *removed the units, top rows of with "Zeolite properties" and "adsorption conditions"
 *remove empty row 3
-
+!!Export excel file to tsv format 
 #Next: File processing using the load_data.py script
 
 
