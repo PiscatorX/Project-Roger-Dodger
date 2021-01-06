@@ -12,7 +12,7 @@ def  get_zeo(filename,outfile):
     zeolite_df["Adsorbent"]
 
     for var in ["SA","Vmicro","Vmeso","pore size","Si_Al","Ag","Ce","Cu","C_start","C_end", "adsorbent"]:
-            zeolite_df[var] =  zeolite_df[var].fillna(0)
+            #zeolite_df[var] =  zeolite_df[var].fillna(0)
             zeolite_df[var] =  zeolite_df[var].astype('float64')
 
     for var in ["Adsorbent","adsorbate","solvent","Batch_Dynamic"]:
@@ -32,7 +32,7 @@ def  get_zeo(filename,outfile):
 
     encoded_Adsorbent
 
-    #remove the categoricol variable columns and any unwanted columns in this case "References"
+    #remove the categorical variable columns and any unwanted columns in this case "References"
     #this can also be automated as part of the step abov
     zeolite_dropped = zeolite_df.drop(["Adsorbent","solvent","adsorbate","Batch_Dynamic", "References"],axis= 1)
     #zeolite_dropped.dtypes
