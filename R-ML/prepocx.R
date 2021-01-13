@@ -6,7 +6,7 @@ library(ggpubr)
 
 zeolite = read.table("zeolitex_final.tsv", sep = "\t", header = T)
 
-colnames(zeolitex) %>% data.frame() 
+colnames(zeolite) %>% data.frame() 
  
 zeolite <- zeolite %>% mutate_all(na_if,"") 
 
@@ -64,7 +64,7 @@ ggdotchart(data = zeolite %>% filter(!is.na(SA)),
            theme(legend.position = "none")
 
 
-SA <- zeolite %>% select(SA) %>% filter(!is.na(SA))
+SA <- zeolite  %>% filter(!is.na(SA))
 
 
 ggplot(data=SA,
@@ -74,15 +74,35 @@ ggplot(data=SA,
             linetype = "dashed", size = 0.6) + 
             ylab("Density") +
             theme_pubr()
-           
+
+
+        
+
   
-ggviolin(data = zeolite %>% select(SA) %>% filter(!is.na(SA)),
+ggviolin(data = SA,
          y = "SA",
+         fill = "light blue",
          palette = c("#00AFBB", "#E7B800", "#FC4E07"),
          add = "boxplot")  
 
-iqr = zeolite$SA  %>% select(SA) %>% filter(!is.na(SA))
-IQR(x = )
+iqr <- summary(SA$SA)   
+
+SA %>% filter(SA < 500 | SA > 700) %>% arrange(desc(SA))
+
+
+SA_fit <- lm(Capacity ~ SA, data = SA)
+
+
+summary(SA_fit)
+
+
+ggscatter(SA, x = "SA", 
+          y = "Capacity",
+          add = "reg.line",
+          conf.int = T) +         
+         stat_cor(label.x = 450, label.y = 60) +
+         stat_regline_equation(label.x = 450, label.y = 65)
+
 
 
 
