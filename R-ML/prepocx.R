@@ -105,4 +105,4 @@ ggscatter(SA, x = "SA",
 
 
 
-
+Vmicro <- zeolite %>% select(Vmicro) %>%
