@@ -63,9 +63,8 @@ def SA_imputation(zeolite_df):
 
     Adsorbent_counts = zeolite_df['Adsorbent'].value_counts()
 
-    SA_nan =  zeolite_df.loc[:,['Adsorbent','SA']].isnull()
-    for i in  zeolite_df[SA_nan['SA']]:
-        print(i)
+    for idx, row  in zeolite_df.loc[:,['Adsorbent','SA']].iterrows():
+        Ads, SA = row
 
     
     
