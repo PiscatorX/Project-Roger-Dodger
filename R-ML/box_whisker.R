@@ -32,7 +32,7 @@ for (i in 1:length(data_cols)){
 
 
 
-#setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML")
+setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML")
 do.call(grid.arrange, c(plots, ncol = 2))
 dev.off()
 
@@ -109,7 +109,7 @@ for (i in 1:length(data_cols)){
   p <- ggscatter(zeolite, x = "Capacity" , y = col , 
             add = "reg.line", conf.int = TRUE, 
             cor.coef = TRUE, cor.method = "pearson",
-            xlab = "Capicity" , ylab = col )
+            xlab = "Capacity" , ylab = col )
 
               
   plots[[i]] <- p

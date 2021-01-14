@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-import argparse
 import pandas as pd
+import argparse
+import collections
+import sys
 
 
 
@@ -43,6 +45,10 @@ def  get_zeo(filename,outfile):
 
     zeolite_final = pd.concat([zeolite_dropped, encoded_solvent, encoded_Adsorbent, encoded_Batch_Dynamic],axis=1 )
 
+    SA_imputation(zeolite_df)
+
+    sys.exit(1)
+    
     zeolite_dropped
 
     #We have our data ready for machine learning
@@ -51,7 +57,18 @@ def  get_zeo(filename,outfile):
     zeolite_final.to_csv(outfile, sep='\t', index = False)
 
     return zeolite_final
-        
+
+
+def SA_imputation(zeolite_df):
+
+    Adsorbent_counts = zeolite_df['Adsorbent'].value_counts()
+
+    SA_nan =  zeolite_df.loc[:,['Adsorbent','SA']].isnull()
+    for i in  zeolite_df[SA_nan['SA']]:
+        print(i)
+
+    
+    
 if  __name__  == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-z','--zeolite_file',help ="sequence file", type=argparse.FileType('r'), default = "/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv", required=False)

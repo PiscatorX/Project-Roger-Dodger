@@ -14,8 +14,13 @@ zeolite_final = pd.read_csv("zeolite_finalx.tsv", delimiter = "\t")
 
 #attributes 
 y = zeolite_final.loc[:,"Capacity"].values
+
+
 #labels
 X = zeolite_final.drop(["Capacity"], axis = 1).values
+
+print(zeolite_final)
+print(y.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
@@ -28,7 +33,9 @@ sc = StandardScaler()
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
-n_features, n_entries  = X_train.shape
+
+
+n_entries, n_features  = X_train.shape
 min_trees =  100
 max_trees =  2000
 trees_step = 25
