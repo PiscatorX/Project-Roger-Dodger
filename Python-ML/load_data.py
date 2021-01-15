@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import pandas as pd
-import argparse
 import collections
+import argparse
+import pprint
 import sys
 
 
@@ -9,13 +10,17 @@ import sys
 def  get_zeo(filename,outfile):
 
     #importing into pandas dataframe
-    zeolite_df = pd.read_csv(filename, delimiter = "\t")
+    zeolite_df = pd.read_csv(filename, skipinitialspace=True, delimiter = "\t")
 
+    
     zeolite_df["Adsorbent"]
 
+    
     for var in ["SA","Vmicro","Vmeso","pore size","Si_Al","Ag","Ce","Cu","C_start","C_end", "adsorbent"]:
             #zeolite_df[var] =  zeolite_df[var].fillna(0)
+            pprint.pprint(zeolite_df[var])
             zeolite_df[var] =  zeolite_df[var].astype('float64')
+            
 
     for var in ["Adsorbent","adsorbate","solvent","Batch_Dynamic"]:
         zeolite_df[var] =  zeolite_df[var].astype('category')
