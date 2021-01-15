@@ -63,9 +63,17 @@ def SA_imputation(zeolite_df):
 
     Adsorbent_counts = zeolite_df['Adsorbent'].value_counts()
 
-    for idx, row  in zeolite_df.loc[:,['Adsorbent','SA']].iterrows():
-        Ads, SA = row
+     
+    SA_nan = zeolite_df[zeolite_df.loc[:,'SA'].isna()]
 
+    print(zeolite_df.loc[:,['Adsorbent','SA']])
+
+    print(zeolite_df.groupby('Adsorbent',as_index=False)['SA'].mean())
+    
+    
+    for idx, row  in SA_nan.loc[:,['Adsorbent','SA']].iterrows():
+        Ads, SA = row
+        #print(Ads)
     
     
 if  __name__  == '__main__':
