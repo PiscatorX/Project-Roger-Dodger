@@ -37,6 +37,20 @@ class GetZeoliteTsv(object):
 
             
 
+        
+    def GroupMeanImputation(self, grp_var_col, impute_val_col):
+
+        """Impute values in one column using group variable columns"""
+
+        print(self.zeolite_df.columns) 
+        #use group means to fill in missing values
+        #Singletons remain NaN
+        self.zeolite_df[impute_val_col] = \
+            self.zeolite_df[impute_val_col].fillna(self.zeolite_df.groupby(grp_var_col)[impute_val_col].transform('mean'))        
+
+
+
+    
     def encode_categorical(self, *categories):
 
 
@@ -52,17 +66,6 @@ class GetZeoliteTsv(object):
         
         self.zeolite_df = pd.concat( [zeolite_dropped] + encoded_categories, axis=1)
  
-
-        
-    def GroupMeanImputation(self, grp_var_col, impute_val_col):
-
-        """Impute values in one column using group variable columns"""
-
-        #use group means to fill in missing values
-        #Singletons remain NaN
-        self.zeolite_df[impute_val_col] = \
-            self.zeolite_df[impute_val_col].fillna(self.zeolite_df.groupby(grp_var_col)[impute_val_col].transform('mean'))        
-
         
         
     def save_zeo(self):
@@ -80,6 +83,6 @@ if  __name__  == '__main__':
     args = parser.parse_args()
     getZeo = GetZeoliteTsv(args.zeolite_file, args.outfile)
     getZeo.parse_zeo() 
-    getZeo.GroupMeanImputation('Absorbent','SA')
+    getZeo.GroupMeanImputation('Adsorbent','SA')
     getZeo.encode_categorical("Adsorbent","solvent","adsorbate","Batch_Dynamic")
     getZeo.save_zeo()
