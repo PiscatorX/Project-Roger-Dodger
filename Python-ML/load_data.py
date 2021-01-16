@@ -24,8 +24,7 @@ class GetZeoliteTsv(object):
         self.df_cols = self.zeolite_df.columns
         self.zeolite_outfile = zeolite_outfile
         self.col_dtype = { col: 'category' for col in categorical_cols }    
-        self.col_dtype.update({col: 'category' for col in self.df_cols if col not in categorical_cols })
-        
+        self.col_dtype.update({col: 'float64' for col in self.df_cols if col not in categorical_cols })
     
         
     def parse_zeo(self):
@@ -42,9 +41,9 @@ class GetZeoliteTsv(object):
 
         """Impute values in one column using group variable columns"""
 
-        print(self.zeolite_df.columns) 
         #use group means to fill in missing values
         #Singletons remain NaN
+                
         self.zeolite_df[impute_val_col] = \
             self.zeolite_df[impute_val_col].fillna(self.zeolite_df.groupby(grp_var_col)[impute_val_col].transform('mean'))        
 
