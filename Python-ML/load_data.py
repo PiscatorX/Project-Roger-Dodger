@@ -34,6 +34,7 @@ class GetZeoliteTsv(object):
         for col in self.df_cols:
             self.zeolite_df[col] = self.zeolite_df[col].astype(self.col_dtype[col])
 
+        return self.zeolite_df
             
 
         
