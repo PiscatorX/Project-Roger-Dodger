@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[17]:
+# In[12]:
 
 
 from load_data import GetZeoliteTsv
+from matplotlib import pyplot
+import seaborn as sns
 
 
 # In[ ]:
@@ -13,34 +15,52 @@ from load_data import GetZeoliteTsv
 
 
 
-# In[18]:
+# In[3]:
 
 
 getZeo = GetZeoliteTsv("New_data_imputation.tsv", "Imputated_Data.tsv")
 
 
-# In[19]:
+# In[4]:
 
 
 zeolite = getZeo.parse_zeo()
 
 
-# In[24]:
+# In[6]:
 
 
-zeolite
+zeolite.head()
 
 
-# In[25]:
+# In[9]:
 
 
 zeolite.loc[zeolite['SA'].isna(),'imputed'] = 'imputed'
 
 
+# In[10]:
+
+
+zeolite.head()
+
+
+# In[15]:
+
+
+sns.scatterplot(data=zeolite, x="SA", y="Capacity")
+
+
+# In[16]:
+
+
+get_ipython().run_line_magic('pinfo', 'sns.scatterplot')
+
+
 # In[ ]:
 
 
-zeolite
+zeolite.head()
 
 
 # In[ ]:
