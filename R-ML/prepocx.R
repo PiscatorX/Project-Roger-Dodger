@@ -18,7 +18,9 @@ zeolite <- zeolite %>% mutate_all(na_if,"")
 #James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2014. An Introduction to Statistical Learning: With Applications in R. Springer Publishing Company, Incorporated.
 set.seed(1)
 
-training_samples <- sample_frac(zeolite, size = 0.8) 
+training_samples <- sample_frac(zeolite, size = 0.8)
+
+colnames(training_samples)
 
 nrow(training_samples)
 
