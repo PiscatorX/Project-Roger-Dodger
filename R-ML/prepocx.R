@@ -1,14 +1,33 @@
-library(magrittr)
-library(dplyr)
 library(tidyverse)
+library(magrittr)
 library(ggplot2)
 library(ggpubr)
+library(dplyr)
+
+
 
 zeolite = read.table("zeolitex_final.tsv", sep = "\t", header = T)
 
 colnames(zeolite) %>% data.frame() 
  
 zeolite <- zeolite %>% mutate_all(na_if,"") 
+
+##################### Multicollinearity Analysis ###############################
+#http://www.sthda.com/english/articles/39-regression-model-diagnostics/160-multicollinearity-essentials-and-vif-in-r/
+#A VIF value that exceeds 5 or 10 indicates a problematic amount of collinearity (James et al. 2014)
+#James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2014. An Introduction to Statistical Learning: With Applications in R. Springer Publishing Company, Incorporated.
+set.seed(1)
+
+training_samples <- sample_frac(zeolite, size = 0.8) 
+
+nrow(training_samples)
+
+test_samples <- setdiff(zeolite, training_samples)
+
+
+
+
+################################################################################
 
 N <- nrow(zeolite)
 
@@ -104,5 +123,47 @@ ggscatter(SA, x = "SA",
          stat_regline_equation(label.x = 450, label.y = 65)
 
 
+############################ Vmicro ############################################
 
-Vmicro <- zeolite %>% select(Vmicro) 
+
+Vmicro  <- zeolite %>% filter(!is.na(Vmicro))
+
+
+
+ggviolin(data = SA,
+         y = "Vmicro",
+         fill = "light blue",
+         palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+         add = "boxplot")  
+
+
+ggplot(Vmicro) + 
+      geom_density(aes(x = Vmicro)) + 
+                     theme_pubr()
+                     
+
+colnames(Vmicro)
+
+ggplot(Vmicro) +
+         geom_point(aes(x = Vmicro, y = Capacity, color = Adsorbent)) +
+         theme_pubr()
+
+
+
+
+ggscatter(SA, x = "Vmicro", 
+          y = "Capacity",
+          add = "reg.line",
+          conf.int = T) +         
+    stat_cor() +
+    stat_regline_equation(label.x = 0.35)
+
+
+
+
+
+
+
+
+
+
