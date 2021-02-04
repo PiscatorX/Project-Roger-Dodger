@@ -18,8 +18,14 @@ zeolite <- zeolite %>% mutate_all(na_if,"")
 #James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani. 2014. An Introduction to Statistical Learning: With Applications in R. Springer Publishing Company, Incorporated.
 set.seed(1)
 
-training_samples <- sample_frac(zeolite, size = 0.8) %>%
-                    select(-c(La,Cs,Nd))
+
+zeolite_subset <- zeolite %>% 
+                    select(-c(La,Cs,Pd,Nd)) 
+
+
+training_samples <- zeolite_subset %>%  sample_frac(size = 0.8)
+                    
+
 
 summary(training_samples)
          
@@ -32,7 +38,7 @@ colnames(training_samples)
 
 nrow(training_samples)
 
-test_samples <- setdiff(zeolite, training_samples)
+test_samples <- setdiff(zeolite_subset, training_samples)
 
 model1 <- lm(Capacity ~ ., data = training_samples)
 
