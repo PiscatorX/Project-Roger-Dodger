@@ -6,29 +6,35 @@ library(ggplot2)
 library(gridExtra)
 
 
+zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10.txt", sep ="\t", header = T)
 
-zeolite <- read.table("/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv", sep ="\t", header = T)
 
-colnames(zeolite)
+zeolite_numeric <- zeolite %>% select_if(is.numeric)
 
-data_cols <-c("SA", "Vmicro", "Vmeso", "pore.size", "Si_Al", "Ag", "Ce", "Cu", "C_start", "C_end", "adsorbent", "Capacity")
-
-plots <- list()
-
-for (i in 1:length(data_cols)){
   
-  col <- data_cols[i]
-  data <- data.frame(zeolite[col])
-  p <- ggboxplot(data,
-                 y = col,
-                 xlab = "",
-                 fill = col,
-                 bxp.errorbar = T,
-                 bxp.errorbar.width = 0.2,
-                 width = 0.25,
-                 palette = "jco")               
- plots[[i]] <- p
+zeolite_categorical <- zeolite[,!(zeolite %in% zeolite_numeric)]
+
+
+plot_ggbxox <- function(col_var, data){
+    ggboxplot(data,
+            y = col_var,
+            xlab = col_var,
+            fill = "light blue",
+            bxp.errorbar = T,
+            size = 1,
+            bxp.errorbar.width = 0.2,
+            width = 1,
+            palette = "jco") + 
+    theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank(),
+            axis.text.y = element_text(size= 18),
+            axis.title =element_text(size = 20))
+    
 }
+  
+
+multiplots <- lapply(colnames(zeolite_numeric), plot_ggbxox,  data = zeolite_numeric)
+
 
 
 
