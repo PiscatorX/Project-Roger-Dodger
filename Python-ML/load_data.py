@@ -73,7 +73,7 @@ class GetZeoliteTsv(object):
         """Impute values in one column using group variable columns"""
 
         #use group means to fill in missing values
-        
+        print("MeanImputation: {}".format(var_col))
         self.zeolite_df[var_col] =  self.zeolite_df[var_col].fillna(self.zeolite_df[var_col].mean())
         
 
@@ -85,7 +85,7 @@ class GetZeoliteTsv(object):
 
         #use group means to fill in missing values
         #Singletons remain NaN
-                
+        print("GroupMeanImputation: {}>>{}".format(grp_var_col, impute_val_col))        
         self.zeolite_df[impute_val_col] = \
             self.zeolite_df[impute_val_col].fillna(self.zeolite_df.groupby(grp_var_col)[impute_val_col].transform('mean'))        
         
@@ -100,11 +100,11 @@ class GetZeoliteTsv(object):
         #https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
 
         categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' ] 
-        encoded_categories = [ pd.get_dummies(self.zeolite_df[col]) for col in categories ]
+        encoded_categories = [ pd.get_dummies(self.zeolite_df[col], drop_first = True) for col in categories ]
         
         zeolite_dropped = self.zeolite_df.drop(categories, axis= 1)
         self.zeolite_df = pd.concat( [zeolite_dropped] + encoded_categories, axis=1)
- 
+         
             
     def save_zeo(self):
 
@@ -117,7 +117,7 @@ if  __name__  == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument('zeolite_file', help ="sequence file", type=argparse.FileType('r'))
-    parser.add_argument('-o','--outfile', default = "ZeoX_Final.tsv", required = False)
+    parser.add_argument('-o','--outfile', default = "ZeoX_Final_encoded.tsv", required = False)
     args = parser.parse_args()
     getZeo = GetZeoliteTsv(args.zeolite_file, args.outfile)
     getZeo.set_dtypes()
@@ -135,11 +135,11 @@ if  __name__  == '__main__':
     getZeo.GroupMeanImputation('Adsorbent','Si_Al')
     getZeo.MeanImputation('Si_Al')
     
-    for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn', 'Fe3', 'La', 'Cs', 'Pd', 'Nd']:
-        getZeo.zerofill(metal)
+    for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn', 'Fe2', 'La', 'Cs', 'Pd', 'Nd']:
+         getZeo.zerofill(metal)
         
     for var in ["ppm","oil_adsorbent_ratio","Temp"]:
-        getZeo.MeanImputation(var)
+         getZeo.MeanImputation(var)
 
-    #getZeo.encode_categorical()
+    getZeo.encode_categorical()
     getZeo.save_zeo()
