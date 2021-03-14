@@ -15,6 +15,7 @@ Made the following changes to the review TP excel file
 *removed the numbered columns
 *removed the units, top rows of with "Zeolite properties" and "adsorption conditions"
 *remove empty row 3
+*Changed "RT" to 20
 !!Export excel file to tsv format 
 #Next: File processing using the load_data.py script
 
