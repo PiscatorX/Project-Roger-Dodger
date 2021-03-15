@@ -24,14 +24,19 @@ set.seed(1)
 # [21] "Temp"                "Capacity" 
 
 zeolite_subset <- zeolite %>% 
-                    select(Adsorbent,SA)#Capacity,Vmicro,Vmeso,pore.size,Si_Al,C_start,solvent,Oil_adsorbent_ratio,Temp) 
+                    select(Adsorbent, Capacity) %>% #,Vmicro,Vmeso,pore.size,Si_Al,C_start,solvent,Oil_adsorbent_ratio,Temp) 
+                    filter
 
 
 #C_start,solvent,Oil_adsorbent_ratio,Temp,Capacity
 
 
 training_samples <- zeolite_subset %>%  sample_frac(size = 0.8)
-                    
+
+zeolite_subset$Adsorbent <- gsub('_', '-', zeolite_subset$Adsorbent)
+
+
+simone1 <- lm(Adsorbent ~ Capacity, data = zeolite_subset)
 
 
 summary(training_samples)
@@ -48,7 +53,9 @@ test_data <- setdiff(zeolite_subset, training_samples,Vmeso)
 
 model1 <- lm(Capacity ~ ., data = training_samples)
 
-model1
+factor(training_samples$Adsorbent)
+
+levels(test_data$Adsorbent)
 
 predictions <- model1 %>% predict(test_data)
 
