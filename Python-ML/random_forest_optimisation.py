@@ -9,20 +9,177 @@ import pandas as pd
 import numpy as np
 
 
-#load saved and cleaned tsv file
-zeolite_final = pd.read_csv("zeolite_finalx.tsv", delimiter = "\t")  
+#zeolite datafile exported from excel
+zeolite_fname = "/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt"
+#filename for datafile
+zeolite_outfile = "ZeoX_Final_encoded.tsv" 
 
+
+
+
+
+#open the raw tsv data file 
+#the file has to be correctly formatted with columns headers  
+zeolite_fileObj = open(zeolite_fname)
+
+
+
+
+
+#create an instance to start processing the datafile
+getZeo = GetZeoliteTsv(zeolite_fileObj, zeolite_outfile)
+
+
+
+
+
+#Sanity check of datatypes
+#important to recognise that datatypes are detected from the files
+#this step also make the string variables as categorical variables
+getZeo.set_dtypes()
+
+
+
+
+
+#this counts the missing records per column and saves them to provided filename
+getZeo.missingness("ZeoX_Final_encoded.miss")
+
+
+
+
+
+#take not of number of columns
+getZeo.zeolite_df.shape
+
+
+
+
+#Drops empty columns inplace
+getZeo.zeolite_df.dropna(how='all', axis=1, inplace = True)
+
+
+
+
+
+#Very that columns have indeed been lost
+getZeo.zeolite_df.shape
+
+
+
+
+
+#Imputation: step by step for easy debugging
+getZeo.GroupMeanImputation('Adsorbent','SA')
+#This last step takes care of singletons 
+getZeo.MeanImputation('SA')
+
+
+
+
+
+getZeo.GroupMeanImputation('Adsorbent','Vmicro')
+getZeo.MeanImputation('Vmicro')
+
+
+
+
+
+getZeo.GroupMeanImputation('Adsorbent','Vmeso')
+getZeo.MeanImputation('Vmeso')
+
+
+
+
+
+getZeo.GroupMeanImputation('Adsorbent','pore_size')
+getZeo.MeanImputation('pore_size')
+
+
+
+
+
+getZeo.GroupMeanImputation('Adsorbent','pore_size')
+getZeo.MeanImputation('pore_size')
+
+
+
+
+
+getZeo.GroupMeanImputation('Adsorbent','Si_Al')
+getZeo.MeanImputation('Si_Al')
+
+
+
+
+
+#Mean imputations only for these variables
+#Names from column headers
+for var in ["C_0","oil_adsorbent_ratio","Temp"]:
+         getZeo.MeanImputation(var)
+
+
+
+
+
+getZeo.zeolite_df.columns
+
+
+
+
+
+#Fill missing values for metals with zeros
+for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn','Cs']:
+         getZeo.zerofill(metal)
+
+
+
+
+
+#convert the categorical variables to intergers also known as one-hot-encoding
+#https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
+getZeo.encode_categorical()
+
+
+
+
+
+#save the new data to a tsv file
+getZeo.save_zeo("ZeoX_Final_encoded.tsv")
+
+
+
+
+
+#get our dataframe 
+zeolite_final  = getZeo.zeolite_df
+
+
+
+
+
+#check our dataframe
+zeolite_final.shape
+
+
+
+
+
+#We extract our data features 
 #attributes 
 y = zeolite_final.loc[:,"Capacity"].values
-
-
 #labels
 X = zeolite_final.drop(["Capacity"], axis = 1).values
 
-print(zeolite_final)
-print(y.shape)
-
+#Split our data into training and test dataset 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+
+y_train.shape
+
+
+y_test.shape
+
 
 #Standardize features by removing the mean and scaling to unit variasnce
 sc = StandardScaler()
@@ -32,8 +189,6 @@ sc = StandardScaler()
 #Compare accuracy with and without scaling
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
-
-
 
 n_entries, n_features  = X_train.shape
 min_trees =  100
