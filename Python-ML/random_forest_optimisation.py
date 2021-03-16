@@ -15,7 +15,7 @@ import sys
 #random string for filename
 random_string = secrets.token_hex(nbytes=4)
 
-outfile = '_'.join(['RF_optimisation',random_string, '.dat'])
+outfile = ''.join(['RF_optimisation_',random_string, '.dat'])
 
 outfile_obj = open(outfile, 'w')
 
@@ -132,3 +132,6 @@ for n_feat  in range(1, n_features + 1):
          data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, accuracy)
          print(data)
          print(data, file = outfile_obj)
+         outfile.flush()
+
+outfile.close()
