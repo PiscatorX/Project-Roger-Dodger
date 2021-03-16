@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 import secrets
 import sys
+import os
 
 
 #random string for filename
@@ -127,11 +128,12 @@ for n_feat  in range(1, n_features + 1):
          mse = metrics.mean_squared_error(y_test, y_pred)
          rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
          errors = abs(y_pred - y_test)
-         mape = 100 * (errors / y_test)
+         mape = 100 * (errors / y_pred)
          accuracy = 100 - np.mean(mape)
          data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, accuracy)
          print(data)
          print(data, file = outfile_obj)
-         outfile.flush()
+         outfile_obj.flush()
 
-outfile.close()
+outfile_obj.close()
+os.fsync()
