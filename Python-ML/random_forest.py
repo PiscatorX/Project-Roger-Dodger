@@ -1,91 +1,210 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.6.0
-#   kernelspec:
-#     display_name: Python 3
-#     language: python
-#     name: python3
-# ---
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[2]:
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
-from matplotlib import pyplot
+from load_data import GetZeoliteTsv
+import matplotlib.pyplot as plt
 from sklearn import metrics
+from scipy import stats
+import seaborn as sns
 import pandas as pd
 import numpy as np
 np.random.seed(0)
 
-#importing into pandas dataframe
-zeolite_df = pd.read_csv("/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv", delimiter = "\t")
 
-zeolite_df["Adsorbent"]
+# In[3]:
 
-for var in ["SA","Vmicro","Vmeso","pore size","Si_Al","Ag","Ce","Cu","C_start","C_end", "adsorbent"]:
-        zeolite_df[var] =  zeolite_df[var].fillna(0)
-        zeolite_df[var] =  zeolite_df[var].astype('float64')
 
-for var in ["Adsorbent","adsorbate","solvent","Batch_Dynamic"]:
-    zeolite_df[var] =  zeolite_df[var].astype('category')
+#zeolite datafile exported from excel
+zeolite_fname = "/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt"
+#filename for datafile
+zeolite_outfile = "ZeoX_Final_encoded.tsv" 
 
-zeolite_df['References'] = zeolite_df['References'].astype('string')
 
-#https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
-zeolite_df.shape
-#zeolite_df
+# In[4]:
+
+
+#open the raw tsv data file 
+#the file has to be correctly formatted with columns headers  
+zeolite_fileObj = open(zeolite_fname)
+
+
+# In[5]:
+
+
+#create an instance to start processing the datafile
+getZeo = GetZeoliteTsv(zeolite_fileObj, zeolite_outfile)
+
+
+# In[6]:
+
+
+#Sanity check of datatypes
+#important to recognise that datatypes are detected from the files
+#this step also make the string variables as categorical variables
+getZeo.set_dtypes()
+
+
+# In[8]:
+
+
+#this counts the missing records per column and saves them to provided filename
+getZeo.missingness("ZeoX_Final_encoded.miss")
+
+
+# In[9]:
+
+
+#take not of number of columns
+getZeo.zeolite_df.shape
+
+
+# In[10]:
+
+
+#Drops empty columns inplace
+getZeo.zeolite_df.dropna(how='all', axis=1, inplace = True)
+
+
+# In[11]:
+
+
+#Very that columns have indeed been lost
+getZeo.zeolite_df.shape
+
+
+# In[12]:
+
+
+#Imputation: step by step for easy debugging
+getZeo.GroupMeanImputation('Adsorbent','SA')
+#This last step takes care of singletons 
+getZeo.MeanImputation('SA')
+
+
+# In[13]:
+
+
+getZeo.GroupMeanImputation('Adsorbent','Vmicro')
+getZeo.MeanImputation('Vmicro')
+
+
+# In[14]:
+
+
+getZeo.GroupMeanImputation('Adsorbent','Vmeso')
+getZeo.MeanImputation('Vmeso')
+
+
+# In[15]:
+
+
+getZeo.GroupMeanImputation('Adsorbent','pore_size')
+getZeo.MeanImputation('pore_size')
+
+
+# In[16]:
+
+
+getZeo.GroupMeanImputation('Adsorbent','pore_size')
+getZeo.MeanImputation('pore_size')
+
+
+# In[17]:
+
+
+getZeo.GroupMeanImputation('Adsorbent','Si_Al')
+getZeo.MeanImputation('Si_Al')
+
+
+# In[18]:
+
+
+#Mean imputations only for these variables
+#Names from column headers
+for var in ["C_0","oil_adsorbent_ratio","Temp"]:
+         getZeo.MeanImputation(var)
+
+
+# In[19]:
+
+
+getZeo.zeolite_df.columns
+
+
+# In[20]:
+
+
+#Fill missing values for metals with zeros
+for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn','Cs']:
+         getZeo.zerofill(metal)
+
+
+# In[21]:
+
 
 #convert the categorical variables to intergers also known as one-hot-encoding
 #https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
-#This can be automated to identify only those categorical variables, encode them and save them to a list for concat
-encoded_Adsorbent = pd.get_dummies(zeolite_df['Adsorbent'])
-encoded_solvent = pd.get_dummies(zeolite_df['solvent'])
-#No need to encode this, all values appear to be same?
-#encoded_adsorbate = pd.get_dummies(zeolite_df['adsorbate'])
-encoded_Batch_Dynamic = pd.get_dummies(zeolite_df['Batch_Dynamic'])
+getZeo.encode_categorical()
 
-encoded_Adsorbent
 
-#remove the categoricol variable columns and any unwanted columns in this case "References"
-#this can also be automated as part of the step abov
-zeolite_dropped = zeolite_df.drop(["Adsorbent","solvent","adsorbate","Batch_Dynamic", "References"],axis= 1)
-#zeolite_dropped.dtypes
+# In[22]:
 
-#encoded_Adsorbent
-encoded_solvent 
-#encoded_Batch_Dynamic  
 
-zeolite_final = pd.concat([zeolite_dropped, encoded_solvent, encoded_Adsorbent, encoded_Batch_Dynamic],axis=1 )
+#save the new data to a tsv file
+getZeo.save_zeo("ZeoX_Final_encoded.tsv")
 
-zeolite_dropped
 
-#We have our data ready for machine learning
-#zeolite_final.dtypes
-#saving dataframe to file for optimisation
-#zeolite_final.to_csv("zeolite_finalx.tsv", sep='\t', index = False)
-from load_data import get_zeo
-zeolite_final = get_zeo("/home/drewx/Documents/Project-Roger-Dodger/data/zeolites_review_TP.csv", "zeo.dat")
+# In[23]:
 
-# +
-#https://stackabuse.com/random-forest-algorithm-with-python-and-scikit-learn/
-#zeolite_final.columns
-# -
 
+#get our dataframe 
+zeolite_final  = getZeo.zeolite_df
+
+
+# In[24]:
+
+
+#check our dataframe
+zeolite_final.shape
+
+
+# In[25]:
+
+
+#We extract our data features 
 #attributes 
 y = zeolite_final.loc[:,"Capacity"].values
 #labels
 X = zeolite_final.drop(["Capacity"], axis = 1).values
 
-X
 
+# In[26]:
+
+
+#Split our data into training and test dataset 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
+
+# In[27]:
+
+
+y_train.shape
+
+
+# In[28]:
+
+
+y_test.shape
+
+
+# In[29]:
 
 
 #Standardize features by removing the mean and scaling to unit variasnce
@@ -96,35 +215,125 @@ sc = StandardScaler()
 #Compare accuracy with and without scaling
 X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
-print(X_test)
+
+
+# In[30]:
+
 
 regressor = RandomForestRegressor(n_estimators=1000, random_state=0)
 #TO DO
 #increase n_estimators
 #run in parallel
 
+
+# In[30]:
+
+
 regressor.fit(X_train, y_train)
 
-y_pred = regressor.predict(X_test)
+
+# In[122]:
+
+
+data_table = pd.DataFrame.from_dict({'y_pred': y_pred, 'y_test': y_test, 'errors': abs(y_pred - y_test)})
+
+
+# In[64]:
+
+
+pd.options.display.max_rows = 4000
+
+
+# In[123]:
+
+
+print(data_table)
+
+
+# In[74]:
+
+
+slope, intercept, r_value, p_value, std_err = stats.linregress(data_table)
+
+
+# In[82]:
+
+
+print("Correlation coefficient (R): {:.4f} ".format(r_value))
+print("p-value : {}".format(p_value))
+print("Intercept: {:.4f}".format(intercept))
+print("Slope: {:.4f}".format(slope))
+print("std_eff: {:.4f}".format(std_err))
+
+
+# In[115]:
+
+
+ax = sns.regplot(y="y_pred",
+                 x="y_test", 
+                 color="g", 
+                 marker="+",
+                 line_kws={'label':'$r^2$ = {:.2f}'.format(slope, intercept,r_value**2, p_value)},
+                 data = data_table)
+
+plt.ylabel('Predicted adsorptive capacity (mgS/g)')
+plt.xlabel('Experimental adsorptive capacity (mgS/g)')
+
+ax.legend()
+plt.show()
+
+
+# In[116]:
+
+
+plt.savefig('lm_r2.pdf', format='pdf', dpi=1200)
+
+
+# In[110]:
+
+
+fig.savefig('lm_r2.svg', format='svg', dpi=1200)
+
+
+# In[33]:
+
 
 pd.DataFrame(y_pred).to_csv('y_pred.csv',  index = False)
 pd.DataFrame(y_test).to_csv('y_test.csv', index = False)
 
-# ?RandomForestRegressor
+
+# In[35]:
 
 
 print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
 print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
 print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
 
+
+# In[117]:
+
+
 errors = abs(y_pred - y_test)
+
+
+# In[118]:
+
+
+errors
+
+
+# In[37]:
+
 
 mape = 100 * (errors / y_test)
 # Calculate and display accuracy
 accuracy = 100 - np.mean(mape)
 print('Accuracy:', round(accuracy, 2), '%.')
 
-# +
+
+# In[ ]:
+
+
 model = DecisionTreeRegressor()
 # fit the model
 model.fit(X_train, y_train)
@@ -142,16 +351,38 @@ for i,v in enumerate(importance):
 pyplot.show()
 #print([x for x in range(len(importance))])
 
-# ?pyplot.bar
-# -
+get_ipython().run_line_magic('pinfo', 'pyplot.bar')
+
+
+# In[ ]:
+
 
 X = zeolite_final.drop(["Capacity"], axis = 1)
 X.iloc[:,19]
+
+
+# In[ ]:
+
 
 X = zeolite_final.drop(["Capacity"], axis = 1)
 feat_importances = pd.Series(model.feature_importances_, index=X.columns)
 feat_importances.nlargest(20).plot(kind='barh')
 
-# ?feat_importances.nlargest
+
+# In[ ]:
+
+
+get_ipython().run_line_magic('pinfo', 'feat_importances.nlargest')
+
+
+# In[96]:
+
+
+get_ipython().run_line_magic('pinfo', 'sns.regplot')
+
+
+# In[ ]:
+
+
 
 
