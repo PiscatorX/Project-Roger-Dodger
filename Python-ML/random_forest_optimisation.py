@@ -113,7 +113,9 @@ min_trees =  100
 max_trees =  2000
 trees_step = 25
 n_jobs  = 4
-header = "n_feat\tn_trees\tmae\tmse\trmse\taccuracy"
+
+#https://www.dataquest.io/blog/understanding-regression-error-metrics/
+header = "n_feat\tn_trees\tmae\tmse\trmse\tr2\tmape"
 
 print(header, file = outfile_obj)
 print(header)
@@ -126,14 +128,17 @@ for n_feat  in range(1, n_features + 1):
          y_pred = regressor.predict(X_test)
          mae = metrics.mean_absolute_error(y_test, y_pred)
          mse = metrics.mean_squared_error(y_test, y_pred)
-         rmse = np.sqrt(metrics.mean_squared_error(y_test, y_pred))
-         errors = abs(y_pred - y_test)
-         mape = 100 * (errors / y_pred)
-         accuracy = 100 - np.mean(mape)
-         data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, accuracy)
-         print(data)
+         rmse = metrics.mean_squared_error(y_test, y_pred, squared = False)
+         #errors = abs(y_pred - y_test)
+         mape = metrics.mean_absolute_percentage_error(y_test, y_pred)
+         r2 =  metrics.r2_score(y_test, y_pred)
+         #data_table  = pd.DataFrame.from_dict({'y_pred':  y_pred,'y_test': y_test, 'errors': errors, 'mape': mape} )
+         #pd.options.display.max_rows = 4000
+         #print(data_table)
+         data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, r2, mape)
          print(data, file = outfile_obj)
          outfile_obj.flush()
+         print(data)
 
 outfile_obj.close()
 os.fsync()
