@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[35]:
+# In[ ]:
 
 
 from sklearn.model_selection import train_test_split
@@ -19,7 +19,7 @@ import os
 np.random.seed(1)
 
 
-# In[2]:
+# In[ ]:
 
 
 #zeolite datafile exported from excel
@@ -28,7 +28,7 @@ zeolite_fname = "/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolites d
 zeolite_outfile = "ZeoX_Final_encoded.tsv" 
 
 
-# In[3]:
+# In[ ]:
 
 
 #open the raw tsv data file 
@@ -36,51 +36,51 @@ zeolite_outfile = "ZeoX_Final_encoded.tsv"
 zeolite_fileObj = open(zeolite_fname)
 
 
-# In[4]:
+# In[ ]:
 
 
 #create an instance to start processing the datafile
 getZeo = GetZeoliteTsv(zeolite_fileObj, zeolite_outfile)
 
 
-# In[5]:
+# In[ ]:
 
 
 #Sanity check of datatypes
 #important to recognise that datatypes are detected from the files
-#this step also make the string variables as categorical variables
+#this step alsos makes the string variables as categorical variables
 getZeo.set_dtypes()
 
 
-# In[6]:
+# In[ ]:
 
 
 #this counts the missing records per column and saves them to provided filename
 getZeo.missingness("ZeoX_Final_encoded.miss")
 
 
-# In[7]:
+# In[ ]:
 
 
 #take not of number of columns
 getZeo.zeolite_df.shape
 
 
-# In[8]:
+# In[ ]:
 
 
 #Drops empty columns inplace
 getZeo.zeolite_df.dropna(how='all', axis=1, inplace = True)
 
 
-# In[9]:
+# In[ ]:
 
 
 #Very that columns have indeed been lost
 getZeo.zeolite_df.shape
 
 
-# In[10]:
+# In[ ]:
 
 
 #Imputation: step by step for easy debugging
@@ -89,42 +89,42 @@ getZeo.GroupMeanImputation('Adsorbent','SA')
 getZeo.MeanImputation('SA')
 
 
-# In[11]:
+# In[ ]:
 
 
 getZeo.GroupMeanImputation('Adsorbent','Vmicro')
 getZeo.MeanImputation('Vmicro')
 
 
-# In[12]:
+# In[ ]:
 
 
 getZeo.GroupMeanImputation('Adsorbent','Vmeso')
 getZeo.MeanImputation('Vmeso')
 
 
-# In[13]:
+# In[ ]:
 
 
 getZeo.GroupMeanImputation('Adsorbent','pore_size')
 getZeo.MeanImputation('pore_size')
 
 
-# In[14]:
+# In[ ]:
 
 
 getZeo.GroupMeanImputation('Adsorbent','pore_size')
 getZeo.MeanImputation('pore_size')
 
 
-# In[15]:
+# In[ ]:
 
 
 getZeo.GroupMeanImputation('Adsorbent','Si_Al')
 getZeo.MeanImputation('Si_Al')
 
 
-# In[16]:
+# In[ ]:
 
 
 #Mean imputations only for these variables
@@ -133,13 +133,13 @@ for var in ["C_0","oil_adsorbent_ratio","Temp"]:
          getZeo.MeanImputation(var)
 
 
-# In[17]:
+# In[ ]:
 
 
 getZeo.zeolite_df.columns
 
 
-# In[18]:
+# In[ ]:
 
 
 #Fill missing values for metals with zeros
@@ -147,7 +147,7 @@ for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn','Cs']:
          getZeo.zerofill(metal)
 
 
-# In[19]:
+# In[ ]:
 
 
 #convert the categorical variables to intergers also known as one-hot-encoding
@@ -155,28 +155,28 @@ for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn','Cs']:
 getZeo.encode_categorical()
 
 
-# In[20]:
+# In[ ]:
 
 
 #save the new data to a tsv file
 getZeo.save_zeo("ZeoX_Final_encoded.tsv")
 
 
-# In[21]:
+# In[ ]:
 
 
 #get our dataframe 
 zeolite_final  = getZeo.zeolite_df
 
 
-# In[22]:
+# In[ ]:
 
 
 #check our dataframe
 zeolite_final.shape
 
 
-# In[23]:
+# In[ ]:
 
 
 #We extract our data features 
@@ -186,26 +186,26 @@ y = zeolite_final.loc[:,"Capacity"].values
 X = zeolite_final.drop(["Capacity"], axis = 1).values
 
 
-# In[24]:
+# In[ ]:
 
 
 #Split our data into training and test dataset 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
 
-# In[25]:
+# In[ ]:
 
 
 y_train.shape
 
 
-# In[26]:
+# In[ ]:
 
 
 y_test.shape
 
 
-# In[27]:
+# In[ ]:
 
 
 #Standardize features by removing the mean and scaling to unit variasnce
@@ -218,59 +218,78 @@ X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
 
-# In[28]:
+# In[ ]:
 
 
-regressor = RandomForestRegressor(n_estimators=1000, random_state=0)
+n_trees = 1000
+n_feat = 0
+#max_features=n_features,
+regressor = RandomForestRegressor(n_estimators=n_trees, random_state=0)
 #TO DO
 #increase n_estimators
 #run in parallel
 
 
-# In[29]:
+# In[ ]:
 
 
 regressor.fit(X_train, y_train)
 
 
-# In[30]:
+# In[ ]:
 
 
 y_pred = regressor.predict(X_test)
 
 
-# In[31]:
+# In[ ]:
 
 
-data_table = pd.DataFrame.from_dict({'y_pred': y_pred, 'y_test': y_test, 'errors': y_pred - y_test, 'abs_errors': abs(y_pred - y_test)})
-
-
-# In[32]:
-
-
-pd.options.display.max_rows = 4000
-print(data_table)
-
-
-# In[36]:
-
-
-np.mean(data_table['errors']**2)
+data = pd.DataFrame.from_dict({'y_pred': y_pred, 'y_test': y_test, 'errors': y_pred - y_test, 'abs_errors': abs(y_pred - y_test)})
 
 
 # In[ ]:
 
 
-#data_table.drop(43, inplace = True)
+pd.options.display.max_rows = 4000
+data
 
 
-# In[37]:
+# In[ ]:
 
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(data_table['y_pred'], data_table['y_test'])
+mae = metrics.mean_absolute_error(y_test, y_pred)
+mse = metrics.mean_squared_error(y_test, y_pred)
+rmse = metrics.mean_squared_error(y_test, y_pred, squared = False)
+mape = metrics.mean_absolute_percentage_error(y_test, y_pred)
+r2 =  metrics.r2_score(y_test, y_pred)
 
 
-# In[38]:
+# In[ ]:
+
+
+data_table = pd.DataFrame.from_dict({"n_feat": [n_feat],
+                                    "n_trees":[n_trees],
+                                     "mae": [mae], 
+                                     "mse": [mse], 
+                                     "rmse":[rmse],
+                                     "r2":[r2],
+                                     "mape":[mape]})
+
+
+# In[ ]:
+
+
+data_table
+
+
+# In[ ]:
+
+
+slope, intercept, r_value, p_value, std_err = stats.linregress(y_pred, y_test)
+
+
+# In[ ]:
 
 
 print("Correlation coefficient (R): {:.4f} ".format(r_value))
@@ -280,15 +299,15 @@ print("Slope: {:.4f}".format(slope))
 print("std_error: {:.4f}".format(std_err))
 
 
-# In[39]:
+# In[ ]:
 
 
 ax = sns.regplot(y="y_pred",
                  x="y_test", 
                  color="g", 
                  marker="+",
-                 line_kws={'label':'$r^2$ = {:.2f}'.format(slope, intercept,r_value**2, p_value)},
-                 data = data_table)
+                 line_kws={'label':'$r^2$ = {:.2f}'.format(r_value**2)},
+                 data = data)
 
 plt.ylabel('Predicted adsorptive capacity (mgS/g)')
 plt.xlabel('Experimental adsorptive capacity (mgS/g)')
@@ -296,79 +315,6 @@ ax.legend(loc=9)
 plt.savefig('traning_r2.pdf', format='pdf', dpi=1200)
 plt.show()
 os.getcwd()
-
-
-# In[40]:
-
-
-print('Mean Absolute Error:', metrics.mean_absolute_error(y_test, y_pred))
-print('Mean Squared Error:', metrics.mean_squared_error(y_test, y_pred))
-print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
-
-
-# In[42]:
-
-
-mape = 100 * (data_table['errors']/data_table['y_pred'])
-# Calculate and display accuracy
-accuracy = 100 - np.mean(mape)
-print('Accuracy:', round(accuracy, 2), '%.')
-
-
-# In[ ]:
-
-
-model = DecisionTreeRegressor()
-# fit the model
-model.fit(X_train, y_train)
-# get importance
-importance = model.feature_importances_
-
-
-# summarize feature importance
-for i,v in enumerate(importance):
-	print('[%s]\tFeature: %0d, Score: %.5f' % (X.columns[i], i,v))
-#plot feature importance
-#pyplot.bar([x for x in range(len(importance))], importance)
-#pyplot.bar([x for x in X.columns], importance)
-
-pyplot.show()
-#print([x for x in range(len(importance))])
-
-get_ipython().run_line_magic('pinfo', 'pyplot.bar')
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-X = zeolite_final.drop(["Capacity"], axis = 1)
-X.iloc[:,19]
-
-
-# In[ ]:
-
-
-X = zeolite_final.drop(["Capacity"], axis = 1)
-feat_importances = pd.Series(model.feature_importances_, index=X.columns)
-feat_importances.nlargest(20).plot(kind='barh')
-
-
-# In[ ]:
-
-
-get_ipython().run_line_magic('pinfo', 'feat_importances.nlargest')
-
-
-# In[ ]:
-
-
-get_ipython().run_line_magic('pinfo', 'sns.regplot')
 
 
 # In[ ]:
