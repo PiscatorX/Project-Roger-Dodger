@@ -120,7 +120,7 @@ if  __name__  == '__main__':
     args = parser.parse_args()
     getZeo = GetZeoliteTsv(args.zeolite_file)
     getZeo.set_dtypes()
-    getZeo.missingness()
+    getZeo.missingness("ZeoX_Final_encoded.miss")
     getZeo.GroupMeanImputation('Adsorbent','SA')
     getZeo.MeanImputation('SA')
     getZeo.GroupMeanImputation('Adsorbent','Vmicro')
