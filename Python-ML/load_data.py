@@ -9,9 +9,7 @@ import sys
 
 class GetZeoliteTsv(object):
 
-    def __init__(self,
-                 zeolite_filename,
-                 zeolite_outfile):
+    def __init__(self, zeolite_filename):
 
         """ Get zeolite tsv  file exported from excel """
         
