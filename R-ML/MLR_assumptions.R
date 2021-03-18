@@ -24,17 +24,16 @@ for (col in names(ref_numeric)){
   
   units(zeolite_df[,col]) <- units_df["Units", col]
   
-  print(head(zeolite_numeric[col]))
-  
 } 
 
 
 
 ############################## Density plots  ##################################
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/density_plots/")
+
 #http://people.duke.edu/~rnau/testing.htm#linearity
 
 #https://sejohnston.com/2012/08/09/a-quick-and-easy-function-to-plot-lm-results-in-r/
-
 
 #https://www.researchgate.net/post/Is_there_a_test_to_identify_non-linear_time_series
 
@@ -195,14 +194,3 @@ ggplot(my.data, aes(SA, Capacity)) +
 
 
 
-
-
-
-
-# ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) + 
-#     geom_point() +
-#     stat_smooth(method = "lm", col = "red") +
-#     labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
-#                        "Intercept =",signif(fit$coef[[1]],5 ),
-#                        " Slope =",signif(fit$coef[[2]], 5),
-#                        " P =",signif(summary(fit)$coef[2,4], 5)))

@@ -137,7 +137,7 @@ if  __name__  == '__main__':
     for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn', 'Fe2', 'La', 'Cs', 'Pd', 'Nd']:
          getZeo.zerofill(metal)
         
-    for var in ["ppm","oil_adsorbent_ratio","Temp"]:
+    for var in ["C_0","oil_adsorbent_ratio","Temp"]:
          getZeo.MeanImputation(var)
 
     getZeo.encode_categorical()
