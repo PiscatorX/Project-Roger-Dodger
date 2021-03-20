@@ -17,7 +17,7 @@ library(wesanderson)
 
 
 
-zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10.txt", sep ="\t", header = T)
+zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
 
 units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_units.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
 
@@ -40,8 +40,7 @@ for (col in names(zeolite_numeric)){
 } 
 
 
-
-setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/plots")
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/boxwhisker")
 
 
 
@@ -73,6 +72,8 @@ lapply(colnames(zeolite_numeric), plot_ggbox,  data = zeolite_numeric, units_df 
 
 
 ###########################Categorical variables################################
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/categorical")
+
 
 dim(zeolite_categorical)
 
@@ -139,12 +140,12 @@ ggsave("Solvent_representation.pdf", height = 179, width = 179, units = "mm")
 
 
 adsorbate_perc <- zeolite_categorical %>% 
-  group_by(S) %>% 
+  group_by(adsorbate) %>% 
   summarise(count=n()) %>%
   mutate(perc = 100 * round(count/sum(count),3)) 
 
-ggdotchart(data = adsorbate_perc, x = "S", y = "perc",
-           color = "S",                                
+ggdotchart(data = adsorbate_perc, x = "adsorbate", y = "perc",
+           color = "adsorbate",                                
            sorting = "descending",                       
            add = "segments",
            add.params = list(color = "lightgray", size = 2),
@@ -168,267 +169,171 @@ ggdotchart(data = adsorbate_perc, x = "S", y = "perc",
 ggsave("adsorbate_representation.pdf", height = 179, width = 179, units = "mm")
 
 
+##################### Corrplot functions #######################################
 
-########################## Corrplot ############################################
 
+zeolite_preprocess <- function(zeolite_numeric,names_df){
+  
+    counts <- zeolite_numeric %>% 
+              summarise_all(n_distinct) %>% 
+              t() %>% 
+              data.frame()
+    
+    colnames(counts) <- "uniq_counts"
+    
+    uniq <- counts %>% filter(uniq_counts <= 2)
+    
+    drop_names <- rownames(uniq)
+    
+    zeolite_numeric <- zeolite_numeric %>%   
+                       select(-!!drop_names)
+    
+    return(zeolite_numeric)
+
+}
+
+
+
+fix_names <- function(zeolite_numeric, names_df){
+  
+      drop_col <- setdiff(colnames(names_df), colnames(zeolite_numeric))
+      names_df <- names_df %>% select(-!!drop_col)
+      
+      return(names_df)
+}
+
+
+get_corrmatrix <- function(data_df){
+
+      df_Scaler <- preProcess(data_df, method = c("center", "scale"))
+      scaled_data <- predict(df_Scaler, data_df)
+      corr_matrix <- scaled_data %>% 
+      cor %>%
+      round(2)
+  
+      return(corr_matrix)
+}
+
+
+get_corrplot <- function(corr_matrix, names_df, pdf_fname, cat=F){
+  
+          dim(names_df)
+          dim(corr_matrix)
+          pvalue_matrix <- cor.mtest(corr_matrix, conf.level = .95)
+          if (cat == F){
+          rownames(corr_matrix) <- names_df["Fullname",]
+          colnames(corr_matrix) <- names_df["Fullname",]
+          }
+          #open pdf graphics device for saving plot
+          pdf(pdf_fname, width = 9.5)
+          col <- colorRampPalette(c("#FF0000","#800080","#696969","#A9A9A9","white","#00FFFF","#00FF00", "#FFA500"))
+          mag.factor <- 2
+          cex.before <- par("cex")
+          par(cex = 0.7)
+          
+          #lower triangle
+          corrplot(corr_matrix,
+                   p.mat = pvalue_matrix$p,
+                   insig = "p-value",
+                   number.cex = .9,
+                   sig.level = -1,
+                   tl.pos = 'lt',
+                   tl.srt = 45,
+                   cl.pos = 'n',
+                   method = "color",
+                   tl.col = "black",
+                   col = col(10),
+                   type = "lower", 
+                   tl.cex = par("cex") * mag.factor, 
+                   cl.cex = par("cex") * mag.factor) #makes the plot 
+          #hack for font sizes
+          par(cex = cex.before)
+          #Uppper triangle
+          corrplot(corr_matrix,
+                   addCoef.col = "black",
+                   col = col(10),
+                   tl.pos='n',
+                   tl.srt = 45,
+                   cl.cex = .9,
+                   type = "upper", 
+                   number.cex = .65,
+                   method = "color",
+                   add=T)
+          #close graphics device
+          dev.off()
+          
+      return(pvalue_matrix)
+          
+}
+          
+ 
+print_stats <- function(response_var, pvalue_matrix, corr_matrix, data_df){
+  
+          pvalue_df <- data.frame(pvalue_matrix$p)
+          colnames(pvalue_df) <- colnames(data_df)
+          rownames(pvalue_df) <- colnames(data_df)
+          pvalue_df <- pvalue_df[response_var] %>% round(3)
+          corr_df <- data.frame(corr_matrix)[response_var]
+          merge(pvalue_df, corr_df, by = 0) %>%
+          column_to_rownames("Row.names") %>%
+          setNames(c("p-value", "R")) %>%
+                       arrange(R)
+}
+          
+######################## Corrplot analysis raw data ############################
+          
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+
+zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
+#No imputation, missing values filled with a zero
+zeolite_numeric <- zeolite %>% 
+                   select_if(is.numeric) %>% 
+                   mutate_if(is.numeric , replace_na, replace = 0)
+#data tables with colnames and corresponding fullnames
+#rownames "colname", "Fullname"
 names_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
 
-names_df
+zeolite_numeric <- zeolite_preprocess(zeolite_numeric, names_df)
 
-counts <- zeolite_numeric %>% 
-          summarise_all(n_distinct) %>% 
-          t() %>% 
-          data.frame()
-
-colnames(counts) <- "uniq_counts"
-
-uniq <- counts %>% filter(uniq_counts <= 2)
-
-drop_names <- rownames(uniq)
-
-zeolite_numeric <- zeolite_numeric %>%  
-                   select(-!!drop_names)
-
-
-
-set.seed(96)
-
-Zeolite_Scaler <- preProcess(zeolite_numeric, method = c("center", "scale"))
-
-zeolite_numeric <- predict(Zeolite_Scaler, zeolite_numeric)
-
-corr_matrix <- zeolite_numeric  %>% 
-                      mutate_if(is.numeric , replace_na, replace = 0) %>%
-                      cor %>%
-                      round(2)
-
-pvalue_matrix <- cor.mtest(corr_matrix, conf.level = .95)
-
-
-setdiff(colnames(names_df), colnames(zeolite_numeric))?nls
-
-
-rownames(corr_matrix) <- names_df["Fullname",]
-colnames(corr_matrix) <- names_df["Fullname",]
-
-
-pdf("corr_matrix.pdf", width = 9.5)
-
-col <- colorRampPalette(c("#FF0000","#800080","#696969","#A9A9A9","white","#00FFFF","#00FF00", "#FFA500"))
-
-mag.factor <- 2
-cex.before <- par("cex")
-par(cex = 0.7) 
-
-corrplot(corr_matrix,
-         p.mat = pvalue_matrix$p,
-         insig = "p-value",
-         number.cex = .9,
-         sig.level = -1,
-         tl.pos = 'lt',
-         tl.srt = 45,
-         cl.pos = 'n',
-         method = "color",
-         tl.col = "black",
-         col = col(10),
-         type = "lower", 
-         tl.cex = par("cex") * mag.factor, 
-         cl.cex = par("cex") * mag.factor) #makes the plot 
-
-par(cex = cex.before)
-
-
-corrplot(corr_matrix,
-         addCoef.col = "black",
-         col = col(10),
-         tl.pos='n',
-         tl.srt = 45,
-         cl.cex = .9,
-         type = "upper", 
-         number.cex = .65,
-         method = "color",
-         add=T)
-
-dev.off()
-
-
-pvalue_df <- data.frame(pvalue_matrix$p)
-
-colnames(pvalue_df) <- colnames(zeolite_numeric)
-
-rownames(pvalue_df) <- colnames(zeolite_numeric)
-
-df_pvalue <- pvalue_df['Capacity'] %>% round(3)
-
-corr_df <- data.frame(corr_matrix)
-
-colnames(corr_df) <- "R" 
-
-row.names(corr_df) <- colnames(zeolite_numeric)
-
-df_corr <- corr_df['R'] 
-
-
-df_merged <- merge(df_pvalue, df_corr, by = 0)
-
-colnames(df_merged)[1:2] <- c("Variable", "p_value")
-
-df_merged %>% arrange(R)
-
-
+names_df <- fix_names(zeolite_numeric, names_df)
+corr_matrix <- get_corrmatrix(zeolite_numeric)
+pvalue_matrix <-  get_corrplot(corr_matrix, names_df, "corr_matrix_raw.pdf")
+print_stats("Capacity", pvalue_matrix, corr_matrix, zeolite_numeric)
 
 ########################## Imputed corrplot ####################################
 
-zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10.txt", sep ="\t", header = T)
-
-zeolite_numeric <- zeolite_encoded %>% select_if(is.numeric)
-
-zeolite_numeric <- zeolite %>% select_if(is.numeric)
-
-zeolite_imputed <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoImputex.tsv", sep ="\t", header = T)
-
 zeolite_imputed <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
-
-ref1 <- colnames(zeolite_imputed)  
-                      
-names_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
-
-order(names_df)
+ref1 <- colnames(zeolite_numeric)
 
 zeolite_numeric_imputed  <- zeolite_imputed %>% 
-                            select_if(is.numeric) %>%
-                            select(!!ref1)                          
+                            select(!!ref1) 
 
-names <- colnames(zeolite_numeric_imputed) 
+corr_matrix2 <- get_corrmatrix(zeolite_numeric_imputed)
+pvalue_matrix2 <-  get_corrplot(corr_matrix2, names_df, "corr_matrix_imputed.pdf")
+print_stats("Capacity", pvalue_matrix2, corr_matrix2, zeolite_numeric_imputed)
 
-names_df <- names_df %>%
-                    select(!!names)
 
-names_df <- names_df[,colnames(zeolite_numeric_imputed)]
-  
-counts <- zeolite_numeric_imputed %>% 
-          summarise_all(n_distinct) %>% 
-          t() %>% 
-          data.frame()
+####################### categorical vars corrplot  ######################################
 
+zeolite_categorical <- zeolite_imputed %>% select(-colnames(zeolite_numeric), Capacity)
+counts <- zeolite_categorical %>% summarise_all(n_distinct) %>% t() %>% data.frame()
 colnames(counts) <- "uniq_counts"
-
 uniq <- counts %>% filter(uniq_counts <= 1)
-
 drop_names <- rownames(uniq)
-
-zeolite_numeric_imputed <- zeolite_numeric_imputed %>%  select(-!!drop_names)
-
-corr_matrix2 <- zeolite_numeric_imputed  %>% 
-                mutate_if(is.numeric , replace_na, replace = 0) %>%
-                cor %>%
-                round(2)
-
-pvalue_matrix <- cor.mtest(corr_matrix2, conf.level = .95)
-
-rownames(corr_matrix2) <- names_df["Fullname",]
-colnames(corr_matrix2) <- names_df["Fullname",]
-
-pdf("corr_matrix2.pdf", width = 9.5)
-
-col <- colorRampPalette(c("#FF0000","#800080","#696969","#A9A9A9","white","#00FFFF","#00FF00", "#FFA500"))
-
-mag.factor <- 2
-cex.before <- par("cex")
-par(cex = 0.7) 
-
-corrplot(corr_matrix2,
-         p.mat = pvalue_matrix$p,
-         insig = "p-value",
-         number.cex = .9,
-         sig.level = -1,
-         tl.pos = 'lt',
-         tl.srt = 45,
-         cl.pos = 'n',
-         method = "color",
-         tl.col = "black",
-         col = col(10),
-         type = "lower", 
-         tl.cex = par("cex") * mag.factor, 
-         cl.cex = par("cex") * mag.factor) #makes the plot 
-
-par(cex = cex.before)
-
-
-corrplot(corr_matrix2,
-         addCoef.col = "black",
-         col = col(10),
-         tl.pos='n',
-         tl.srt = 45,
-         
-         type = "upper", 
-         number.cex = .65,
-         method = "color",
-         add=T)
-
-dev.off()
-
-
-
-######################### Multicollinearity ####################################
-
-dt = sort(sample(nrow(zeolite_numeric_imputed), nrow(zeolite_numeric_imputed)*.7))
-
-train_data  <- zeolite_numeric_imputed[dt,]
-test_data <- zeolite_numeric_imputed[-dt,]
-
-model1 <- lm(Capacity ~ ., data = train_data)
-
-summary(model1)
-
-
-
-
-
-####################### categorical vars  ######################################
-
-zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10.txt", sep ="\t", header = T)
-
-zeolite_imputed <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
-
-zeolite_categorical <- zeolite_imputed[,!(colnames(zeolite_imputed) %in%  colnames(zeolite_numeric))]
-
-zeolite_categorical <- cbind(zeolite_categorical, zeolite_imputed$Capacity)
-
-colnames(zeolite_categorical)[33] <-  "Capacity"
-
-colnames(zeolite_categorical)[]
-
-counts <- zeolite_categorial %>% summarise_all(n_distinct) %>% t() %>% data.frame()
-
-colnames(counts) <- "uniq_counts"
-
-uniq <- counts %>% filter(uniq_counts <= 1)
-
-drop_names <- rownames(uniq)
-
 zeolite_categorical <- zeolite_categorical %>%  select(-!!drop_names)
 
-corr_matrix2 <- zeolite_categorical  %>% 
-                mutate_if(is.numeric , replace_na, replace = 0) %>%
-                cor %>%
-                round(2)
 
-pvalue_matrix2 <- cor.mtest(corr_matrix2, conf.level = .95)
-
-rownames(corr_matrix2) <- names_df["Fullname",]
-colnames(corr_matrix2) <- names_df["Fullname",]
+corr_matrix3 <- get_corrmatrix(zeolite_categorical)
+pvalue_matrix3 <- cor.mtest(corr_matrix3, conf.level = .95)
 
 pdf("corr_matrix2cat.pdf", width = 9.5)
-
 col <- colorRampPalette(c("#FF0000","#800080","#696969","#A9A9A9","white","#00FFFF","#00FF00", "#FFA500"))
-
 mag.factor <- 2
 cex.before <- par("cex")
 par(cex = 0.5) 
 
-corrplot(corr_matrix2,
-         p.mat = pvalue_matrix2$p,
+corrplot(corr_matrix3,
+         p.mat = pvalue_matrix3$p,
          insig = "p-value",
          number.cex = .75,
          sig.level = -1,
@@ -445,8 +350,7 @@ corrplot(corr_matrix2,
 #par(cex = cex.before)
 
 
-
-corrplot(corr_matrix2,
+corrplot(corr_matrix3,
          addCoef.col = "black",
          col = col(10),
          tl.pos='n',
@@ -459,23 +363,18 @@ corrplot(corr_matrix2,
 
 dev.off()
 
-df_corr <-  corr_matrix2 %>% data.frame()
+print_stats("Capacity", pvalue_matrix3, corr_matrix3, zeolite_categorical)
 
-colnames(df_corr) <-  rownames(df_corr)
+######################### Multicollinearity ####################################
 
-df_r <- df_corr[29] %>% arrange(desc(zeolite_imputed.Capacity))
+dt = sort(sample(nrow(zeolite_numeric_imputed), nrow(zeolite_numeric_imputed)*.7))
 
-df_pvalue <- pvalue_matrix2$p %>%  data.frame()
+train_data  <- zeolite_numeric_imputed[dt,]
+test_data <- zeolite_numeric_imputed[-dt,]
 
-colnames(df_pvalue) <-  rownames(df_corr)
-rownames(df_pvalue) <- colnames(df_pvalue)
+model1 <- lm(Capacity ~ ., data = train_data)
 
-df_p <- df_pvalue[29] %>% round(4) %>%  set_names("Capacity") %>% arrange(Capacity)
+summary(model1)
 
-df_merged <- merge(df_r, df_p, by = 0)
 
-colnames(df_merged) <- c("variable", "correlation","p_value")
-
-category_corr <- df_merged %>% arrange(desc(correlation)) 
-
-write.table(category_corr, "category_corr.tsv",  sep = "\t", row.names = F)
+################################################################################

@@ -9,9 +9,7 @@ import sys
 
 class GetZeoliteTsv(object):
 
-    def __init__(self,
-                 zeolite_filename,
-                 zeolite_outfile):
+    def __init__(self, zeolite_filename):
 
         """ Get zeolite tsv  file exported from excel """
         
@@ -122,7 +120,7 @@ if  __name__  == '__main__':
     args = parser.parse_args()
     getZeo = GetZeoliteTsv(args.zeolite_file)
     getZeo.set_dtypes()
-    getZeo.missingness()
+    getZeo.missingness("ZeoX_Final_encoded.miss")
     getZeo.GroupMeanImputation('Adsorbent','SA')
     getZeo.MeanImputation('SA')
     getZeo.GroupMeanImputation('Adsorbent','Vmicro')
@@ -139,7 +137,7 @@ if  __name__  == '__main__':
     for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn', 'Fe2', 'La', 'Cs', 'Pd', 'Nd']:
          getZeo.zerofill(metal)
         
-    for var in ["ppm","oil_adsorbent_ratio","Temp"]:
+    for var in ["C_0","oil_adsorbent_ratio","Temp"]:
          getZeo.MeanImputation(var)
 
     getZeo.encode_categorical()
