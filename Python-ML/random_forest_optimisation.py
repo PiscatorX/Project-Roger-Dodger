@@ -109,10 +109,10 @@ X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
 n_entries, n_features  = X_train.shape
-min_trees =  100
-max_trees =  2000
-trees_step = 25
-n_jobs  = 4
+min_trees =  1
+max_trees =  1000
+trees_step = 1
+n_jobs  = 10
 
 #https://www.dataquest.io/blog/understanding-regression-error-metrics/
 header = "n_feat\tn_trees\tmae\tmse\trmse\tr2\tmape"
