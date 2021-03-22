@@ -6,18 +6,22 @@ library(tibble)
 library(psych)
 library(MASS)
 library(units)
+library(xtable)
+library(relaimpo)
 
 
-#import
+#import the preprocessed and variable encoded data file
 zeolite_df <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
 
 dim(zeolite_df)
 
 #reference dataset for numerical columns
 zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
-
 ref_numeric <- zeolite_ref %>% select_if(is.numeric)
+numuric_cols <- colnames(ref_numeric)
+#zeolite_df <-  zeolite_df %>% dplyr::select(!!num_cols)
 
+#Check how this standardisation affects the encoded variables 
 Scaler <- preProcess(zeolite_df, method = c("center", "scale"))
 
 zeolite<- predict(Scaler, zeolite_df)
@@ -26,26 +30,19 @@ dim(zeolite)
 
 
 
-############################## Linearity test ##################################################
-
-setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/linearity/")
-
-units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_units.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
-install_symbolic_unit("ratio")
-install_symbolic_unit("mgS")
-
-
-
-
-
-
 ############################## MLR #######################################
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/multiple")
+
+#zeolite <- zeolite[-c(23,83,299,300),]
+
+dim(zeolite)
 
 model1 <- lm(Capacity ~ . , data = zeolite)
 
 summary(model1)
 #residuals vs fitted
 #https://online.stat.psu.edu/stat462/node/117/
+#https://www.scribbr.com/statistics/multiple-linear-regression/
 
 #Q-Q plot
 #https://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot
@@ -53,65 +50,133 @@ summary(model1)
 
 #https://stats.stackexchange.com/questions/58141/interpreting-plot-lm
 #http://127.0.0.1:29988/help/library/stats/help/Distributions
+
+par(mfrow=c(2,2))
+
+pdf("lm_diag_pre_stepAIC.pdf")
+
 plot(model1)
 
-mlr <- tidy(model1) %>% arrange(p.value)
+dev.off()
 
-m1r_sig <- mlr %>% column_to_rownames("term") %>%
-            round(6) %>%
-            arrange(p.value)
+zeolite_mlr <- tidy(model1) %>% 
+               arrange(desc(estimate)) %>% 
+               data.frame() %>% 
+               mutate_if(is.numeric, round, 6)
 
+zeolite_mlr
 
-
-mlr_df <- mlr %>% column_to_rownames("term") %>%
-        round(6) %>%
-        arrange(p.value)
-
-write.table(mlr_df, "multiple_regress.tsv", sep = "\t", quote = F)
-
-
-m1r1_sig <- mlr[mlr$term %in% colnames(zeolite_ref),] %>% 
+zeolite_mlr[zeolite_mlr$term %in% colnames(zeolite_ref),] %>% 
                  data.frame() %>%
                  filter(p.value <= 0.05) %>%
                  column_to_rownames("term") %>%
                  round(7)
-
-model1  
-
-
-
-
-
+  
 
 ################################################################################
 
-stepwise_mlr <- stepAIC(model1)
+stepwise_mlr <- stepAIC(model1, direction = "both")
 
-best_model1 <-  tidy(stepwise_mlr) %>% column_to_rownames("term")  %>% arrange(p.value)
+best_fit1 <-  tidy(stepwise_mlr) %>% column_to_rownames("term")  %>% arrange(p.value)
 
-best_model1
+best_fit1
 
-nrow(best_model1)
+nrow(best_fit1)
 
-################################################################################
+################################# MLR analysis #################################
+#https://www.linkedin.com/pulse/how-find-most-important-variables-r-amit-jain
 
-best_model_cols <- colnames(zeolite)[colnames(zeolite) %in% row.names(best_model1)]
+best_model_cols <- colnames(zeolite)[colnames(zeolite) %in% row.names(best_fit1)]
 
 best_model_cols
+
+length(best_model_cols)
 
 best_model_zeolite <- zeolite[c(best_model_cols, "Capacity")]
 
 dim(best_model_zeolite)
   
-model2 <- lm(log(Capacity) ~ . , data = best_model_zeolite )
+fit2 <- lm(Capacity ~ . , data = best_model_zeolite )
+
+summary(fit2)
+
+par(mfrow=c(2,2))
+
+pdf("lm_diag_post_stepAIC.pdf")
+
+plot(fit2)
+
+dev.off()
+
+sigma(fit2)/mean(best_model_zeolite$Capacity)
+
+confint(fit2) 
+
+augment(fit2)
+
+best_fit2 <-  tidy(fit2) %>% column_to_rownames("term")  %>% arrange(desc(estimate)) %>% round(6)
+
+best_fit2
+
+relImportance <- calc.relimp(fit2, type = "lmg", rela = TRUE)
+
+print(relImportance)
+
+print(xtable(best_fit2, digits=5, type = "latex"), file = "beest_fit_mlr_numeric.tex")
+
+write.table(best_fit2, "best_fit2_numeric.tsv", sep ="\t", quote = F)
+
+model_statistics <- glance(fit2)
+getwd()
+
+write.table(model_statistics,"mlr_statics_numeric.tsv", sep ="\t", row.names = F, quote = F)
+
+##########################################################################################
+
+lm_metrics <- augment(lm_fit) %>% data.frame()
+lm_stats <- tidy(lm_fit)
+
+#plot pairwise regression
+#visualise the distrubution of points around fitted line
+print(">>>Regression line with residuals")
+ggplot(lm_metrics, aes_string(x = term, y = response_var)) +
+  geom_point(size = 1.5) + 
+  geom_smooth(method = "lm", se = FALSE, size = 1, formula = y ~ x) +      
+  geom_segment(aes_string(xend = term, yend = ".fitted"), color = "red", size = 0.5) +
+  stat_poly_eq(formula = y ~ x, 
+               aes(label =  paste(stat(rr.label), stat(p.value.label), sep = "*\", \"*")), 
+               size = 3, parse = TRUE, label.y = "top", label.x = "right") +
+  theme(panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size=30, colour = "black"),
+        axis.title = element_text(size=30, colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
+
+res_fname = paste0(term,  "_pw_regres.pdf")
+ggsave(res_fname)
+
+if (length(dev.list()!=0)) {dev.off()}
+
+#Save model statistic
+model_data <- glance(lm_fit) %>% dplyr::select(r.squared, statistic, p.value)
+model_data <- cbind(term, model_data)
+model_entries <- rbind(model_entries, model_data)
+print(model_entries)
 
 summary(model2)
 
+shapiro.test(resid(model2)) 
+
 plot(model2, 1)
+
+plot(model2, 2)
 
 plot(model2, 3)
 
-plot(model2, 2)
+plot(model2, 4)
+
+plot(model2, 5)
+
 
 mlr2 <- tidy(model2) %>% arrange(p.value) %>% data.frame()
 
@@ -136,54 +201,21 @@ m1r1_sig <- mlr[mlr$term %in% colnames(zeolite_ref),] %>%
   column_to_rownames("term") %>%
   round(7)
 
+print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.tex")
 
+################################################################################
+#Numeric data only
+# Residual standard error: 0.5782 on 293 degrees of freedom
+# Multiple R-squared:  0.6496,	Adjusted R-squared:  0.6389 
+# F-statistic: 60.36 on 9 and 293 DF,  p-value: < 2.2e-16
+# Ce           0.727957  0.048780  14.923348 0.000000
+# C_0          0.369518  0.034391  10.744579 0.000000
+# pore_size    0.276053  0.078893   3.499075 0.000539
+# Vmicro       0.167634  0.050310   3.332041 0.000973
+# Ag           0.069534  0.035005   1.986378 0.047923
+# (Intercept) -0.021414  0.033437  -0.640429 0.522394
+# Si_Al       -0.133975  0.042450  -3.156090 0.001765
+# Vmeso       -0.179864  0.037378  -4.811987 0.000002
+# Temp        -0.262532  0.042672  -6.152267 0.000000
+# Cu          -0.559248  0.053833 -10.388637 0.000000
 
-
-# > summary(model2)
-# 
-# Call:
-#   lm(formula = log(Capacity) ~ ., data = best_model_zeolite)
-# 
-# Residuals:
-#   Min      1Q  Median      3Q     Max 
-# -3.4116 -0.1728  0.0916  0.3628  1.3065 
-# 
-# Coefficients: (7 not defined because of singularities)
-# Estimate Std. Error t value Pr(>|t|)    
-# (Intercept)     2.43269    1.65859   1.467  0.14805    
-# SA              1.83347    0.98208   1.867  0.06715 .  
-# Vmicro          0.13366    0.46398   0.288  0.77435    
-# Si_Al           1.45230    0.67321   2.157  0.03529 *  
-#   Na             11.88505    4.01296   2.962  0.00448 ** 
-#   Ag              0.30535    0.14009   2.180  0.03351 *  
-#   Ce              2.19479    2.48794   0.882  0.38146    
-# Ni              0.08629    0.09762   0.884  0.38052    
-# Zn              0.17463    0.10442   1.672  0.10003    
-# Cs             -1.68808    0.59198  -2.852  0.00608 ** 
-#   ppm             1.91924    0.38992   4.922 7.91e-06 ***
-#   Temp           -0.31897    0.27778  -1.148  0.25573    
-# AgY             0.63675    0.35138   1.812  0.07533 .  
-# CeY                  NA         NA      NA       NA    
-# CuAgY           1.21088    0.37062   3.267  0.00186 ** 
-#   CuICeIVY       -1.12553    1.99518  -0.564  0.57492    
-# CuIY                 NA         NA      NA       NA    
-# CuX            -1.46269    0.71473  -2.046  0.04541 *  
-#   CuY            -2.42908    1.08157  -2.246  0.02867 *  
-#   HFAU.5          0.48495    0.15415   3.146  0.00265 ** 
-#   NaY                  NA         NA      NA       NA    
-# NiCeY                NA         NA      NA       NA    
-# clinoptilolite       NA         NA      NA       NA    
-# TP             -0.38501    0.18100  -2.127  0.03783 *  
-#   ETHER           1.24855    0.50726   2.461  0.01695 *  
-#   n.Octane             NA         NA      NA       NA    
-# n.heptane            NA         NA      NA       NA    
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# Residual standard error: 0.8417 on 56 degrees of freedom
-# (95 observations deleted due to missingness)
-# Multiple R-squared:  0.7199,	Adjusted R-squared:  0.6249 
-# F-statistic: 7.576 on 19 and 56 DF,  p-value: 1.428e-09
-#cooksd <- cooks.distance(model2)
-  
-  
