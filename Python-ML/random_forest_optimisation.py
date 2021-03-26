@@ -30,7 +30,7 @@ zeolite_outfile = "ZeoX_Final_encoded.tsv"
 zeolite_fileObj = open(zeolite_fname)
 
 #create an instance to start processing the datafile
-getZeo = GetZeoliteTsv(zeolite_fileObj, zeolite_outfile)
+getZeo = GetZeoliteTsv(zeolite_fileObj)
 
 #Sanity check of datatypes
 #important to recognise that datatypes are detected from the files
@@ -109,6 +109,8 @@ X_train = sc.fit_transform(X_train)
 X_test = sc.transform(X_test)
 
 n_entries, n_features  = X_train.shape
+print(n_entries, n_features)
+sys.exit(1)
 min_trees =  1
 max_trees =  1000
 trees_step = 1
@@ -123,22 +125,22 @@ for n_feat  in range(1, n_features + 1):
      print(file = outfile_obj)
      print()
      for n_trees in range(min_trees,  max_trees+trees_step,  trees_step):
-         regressor = RandomForestRegressor(n_estimators=n_trees, random_state=0, max_features = n_feat, n_jobs = n_jobs )
-         regressor.fit(X_train, y_train)
-         y_pred = regressor.predict(X_test)
-         mae = metrics.mean_absolute_error(y_test, y_pred)
-         mse = metrics.mean_squared_error(y_test, y_pred)
-         rmse = metrics.mean_squared_error(y_test, y_pred, squared = False)
-         #errors = abs(y_pred - y_test)
-         mape = metrics.mean_absolute_percentage_error(y_test, y_pred)
-         r2 =  metrics.r2_score(y_test, y_pred)
-         #data_table  = pd.DataFrame.from_dict({'y_pred':  y_pred,'y_test': y_test, 'errors': errors, 'mape': mape} )
-         #pd.options.display.max_rows = 4000
-         #print(data_table)
-         data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, r2, mape)
-         print(data, file = outfile_obj)
-         outfile_obj.flush()
-         print(data)
+         print(n_feat, n_trees)
+         # regressor = RandomForestRegressor(n_estimators=n_trees, max_features = n_feat, n_jobs = n_jobs )
+         # regressor.fit(X_train, y_train)
+         # y_pred = regressor.predict(X_test)
+         # mae = metrics.mean_absolute_error(y_test, y_pred)
+         # mse = metrics.mean_squared_error(y_test, y_pred)
+         # rmse = metrics.mean_squared_error(y_test, y_pred, squared = False)
+         # #errors = abs(y_pred - y_test)
+         # mape = metrics.mean_absolute_percentage_error(y_test, y_pred)
+         # r2 =  metrics.r2_score(y_test, y_pred)
+         # #data_table  = pd.DataFrame.from_dict({'y_pred':  y_pred,'y_test': y_test, 'errors': errors, 'mape': mape} )
+         # #pd.options.display.max_rows = 4000
+         # #print(data_table)
+         # data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, r2, mape)
+         # print(data, file = outfile_obj)
+         # outfile_obj.flush()
+         # print(data)
 
 outfile_obj.close()
-os.fsync()
