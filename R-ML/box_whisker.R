@@ -71,7 +71,7 @@ lapply(colnames(zeolite_numeric), plot_ggbox,  data = zeolite_numeric, units_df 
 
 
 
-###########################Categorical variables################################
+###########################Categorical variables#######################################################
 setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/categorical")
 
 
@@ -89,7 +89,7 @@ ggdotchart(data = adsorbent_perc, x = "Adsorbent", y = "perc",
           add = "segments",
           add.params = list(color = "lightgray", size = 2),
           rotate = TRUE,                               
-          dot.size = 9,
+          dot.size = 10,
           ylab = "Dataset represation (%)",
           label = adsorbent_perc$perc,                       
           font.label = list(color = "black", size = 11, 
@@ -101,8 +101,9 @@ ggdotchart(data = adsorbent_perc, x = "Adsorbent", y = "perc",
                           axis.ticks.x = element_blank(),
                           axis.text.x = element_blank(),
                           legend.position = 'none',
-                          panel.border = element_rect(colour = "black", fill=NA, size=1))) +
-         geom_hline(yintercept = 0, linetype = 1, color = "lightgray", size = 2)
+                          panel.border = element_rect(colour = "black", fill=NA, size=1)))
+
+
 
 ggsave("Adsorbent_representation.pdf", height = 179, width = 179, units = "mm")
 
@@ -119,7 +120,7 @@ ggdotchart(data = solvent_perc, x = "solvent", y = "perc",
            add = "segments",
            add.params = list(color = "lightgray", size = 2),
            rotate = TRUE,                               
-           dot.size = 9,
+           dot.size = 10,
            xlab = "Solvent",
            ylab = "Dataset represation (%)",
            label = solvent_perc$perc,                       
@@ -132,8 +133,7 @@ ggdotchart(data = solvent_perc, x = "solvent", y = "perc",
                            axis.ticks.x = element_blank(),
                            axis.text.x = element_blank(),
                            legend.position = 'none',
-                           panel.border = element_rect(colour = "black", fill=NA, size=1))) +
-  geom_hline(yintercept = 0, linetype = 1, color = "lightgray", size = 2)
+                           panel.border = element_rect(colour = "black", fill=NA, size=1))) 
 
 ggsave("Solvent_representation.pdf", height = 179, width = 179, units = "mm")
 
@@ -150,7 +150,7 @@ ggdotchart(data = adsorbate_perc, x = "adsorbate", y = "perc",
            add = "segments",
            add.params = list(color = "lightgray", size = 2),
            rotate = TRUE,                               
-           dot.size = 9,
+           dot.size = 12,
            xlab = "Adsorbate",
            ylab = "Dataset represation (%)",
            label = adsorbate_perc$perc,                       
@@ -163,8 +163,7 @@ ggdotchart(data = adsorbate_perc, x = "adsorbate", y = "perc",
                            axis.ticks.x = element_blank(),
                            axis.text.x = element_blank(),
                            legend.position = 'none',
-                           panel.border = element_rect(colour = "black", fill=NA, size=1))) +
-  geom_hline(yintercept = 0, linetype = 1, color = "lightgray", size = 2)
+                           panel.border = element_rect(colour = "black", fill=NA, size=1))) 
 
 ggsave("adsorbate_representation.pdf", height = 179, width = 179, units = "mm")
 
@@ -207,7 +206,7 @@ corr_matrix <- zeolite_numeric  %>%
 pvalue_matrix <- cor.mtest(corr_matrix, conf.level = .95)
 
 
-setdiff(colnames(names_df), colnames(zeolite_numeric))?nls
+setdiff(colnames(names_df), colnames(zeolite_numeric))
 
 
 rownames(corr_matrix) <- names_df["Fullname",]

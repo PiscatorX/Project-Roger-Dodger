@@ -5,6 +5,7 @@ library(broom)
 library(xtable)
 library(ggpmisc)
 library(dplyr)
+library(reshape2)
 
 
 
@@ -60,6 +61,25 @@ plot_ggdensity <- function(col_var, data, units_df){
 
 
 lapply(colnames(ref_numeric), plot_ggdensity,  data = zeolite_df, units_df = units_df)
+############################ simple linear regression ##########################
+zeo_dat <- ref_numeric %>%
+  dplyr::select(-Capacity)
+
+
+simple_lr <- function(term, response_var = "Capacity",  data = zeolite_df_nounits){
+    
+    print(term)
+    fmla = as.formula(paste(response_var, term,  sep = " ~ ")) 
+    lm_fit =  lm(fmla, data = data)
+    shapiro.test(resid(lm_fit))
+  
+}
+
+
+lapply(colnames(zeo_dat), simple_lr)
+
+
+
 
 
 ############################## Pairwise relationships ##########################
@@ -146,13 +166,9 @@ ggplotPW_regress <- function (term, response_var = "Capacity",  data = zeolite_d
   print(model_entries)
 }
 
-
-
-
 cols = c('r.squared', 'statistic', 'p.value')
 model_table = data.frame(matrix(ncol = length(cols), nrow = 0)) 
 colnames(model_table) <- cols
-
 
 for (col in colnames(ref_numeric)){
   
@@ -163,4 +179,50 @@ for (col in colnames(ref_numeric)){
 model_table <- model_table %>% arrange(p.value)
 print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.tex")
 
+################################################################################
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+
+
+zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
+ref_numeric <- zeolite_ref %>% select_if(is.numeric)
+numeric_cols <- colnames(ref_numeric)
+
+zeolite_numx <- zeolite %>%
+                    select(!!numeric_cols)
+
+
+
+for (col in names(ref_numeric)){
+  units(zeolite_numx[,col]) <- units_df["Units", col]
+  
+} 
+
+
+
+plot_scatterlm <- function(col_var, data, units_df){
+  
+  p<-ggplot(data= data, aes_string(x = col_var, y = "Capacity")) +
+    xlab(label = units_df["Fullname", col_var]) +
+    geom_point(size = 4, colour = "#000080", alpha = 0.5) + 
+    geom_smooth(method = "lm", size = 2, formula = y ~ x, colour = "red") +      
+    stat_poly_eq(formula = y ~ x, 
+                 aes(label =  paste(stat(rr.label), stat(p.value.label), sep = "*\", \"*")), 
+                 size = 3, parse = TRUE, label.y = "top", label.x = "right") +
+    coord_cartesian(clip = 'off') +
+    theme(panel.grid.minor = element_blank(),
+          plot.margin = margin(0.25, 0.3, 0.25, 0.3, "cm"),
+          panel.background = element_blank(),
+          axis.text = element_text(size=26, colour = "black"),
+          axis.title = element_text(size=26, colour = "black"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1))
+    
+  fname = paste0(col_var,  "_scatter.pdf")
+  print(p)
+  ggsave(fname)
+  
+}
+
+lapply(colnames(zeolite_numx), plot_scatterlm,  data = zeolite_numx, units_df = units_df)
+
+plot_scatterlm("SA", data = zeolite_numx, units_df = units_df)
 

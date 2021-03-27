@@ -118,6 +118,7 @@ best_fit2 <-  tidy(fit2) %>% column_to_rownames("term")  %>% arrange(desc(estima
 
 best_fit2
 
+
 relImportance <- calc.relimp(fit2, type = "lmg", rela = TRUE)
 
 print(relImportance)
@@ -218,4 +219,21 @@ print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.t
 # Vmeso       -0.179864  0.037378  -4.811987 0.000002
 # Temp        -0.262532  0.042672  -6.152267 0.000000
 # Cu          -0.559248  0.053833 -10.388637 0.000000
+
+
+
+
+################################################################################
+data(swiss)
+
+fit_test <- lm(Fertility ~ .,data = swiss)
+
+summary(fit_test)
+
+
+(relImportnc <- calc.relimp(formula = Capacity ~ ., data = best_model_zeolite, type = "lmg", rela = TRUE))
+
+(relImportnc <- calc.relimp(formula = Fertility ~ ., data = swiss, type = "lmg", rela = TRUE))
+
+install.packages(parallel)
 
