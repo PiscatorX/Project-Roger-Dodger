@@ -171,6 +171,8 @@ pd.options.display.max_rows = 4000
 data
 
 
+data.to_csv("random_forest.dataset")
+
 mae = metrics.mean_absolute_error(y_test, y_pred)
 mse = metrics.mean_squared_error(y_test, y_pred)
 rmse = metrics.mean_squared_error(y_test, y_pred, squared = False)
