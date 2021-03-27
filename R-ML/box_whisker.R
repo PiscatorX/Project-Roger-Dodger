@@ -194,9 +194,9 @@ zeolite_numeric <- zeolite_numeric %>%
 
 set.seed(96)
 
-Zeolite_Scaler <- preProcess(zeolite_numeric, method = c("center", "scale"))
-
-zeolite_numeric <- predict(Zeolite_Scaler, zeolite_numeric)
+# Zeolite_Scaler <- preProcess(zeolite_numeric, method = c("center", "scale"))
+# 
+# zeolite_numeric <- predict(Zeolite_Scaler, zeolite_numeric)
 
 corr_matrix <- zeolite_numeric  %>% 
                       mutate_if(is.numeric , replace_na, replace = 0) %>%
@@ -252,29 +252,28 @@ corrplot(corr_matrix,
 
 dev.off()
 
+################################################################################
+pvalue_matrix_df <- data.frame(pvalue_matrix$p)
+colnames(pvalue_matrix_df) <- colnames(zeolite_numeric)
+rownames(pvalue_matrix_df) <- colnames(zeolite_numeric)
 
-pvalue_df <- data.frame(pvalue_matrix$p)
+pvalue_df <- pvalue_matrix_df['Capacity'] %>% arrange(Capacity) %>% rename(pvalue=Capacity) %>% round(4)
+corr_df <- data.frame(corr_matrix)["Capacity"] %>% arrange(Capacity) %>% rename(R=Capacity) %>% round(4)
 
-colnames(pvalue_df) <- colnames(zeolite_numeric)
-
-rownames(pvalue_df) <- colnames(zeolite_numeric)
-
-df_pvalue <- pvalue_df['Capacity'] %>% round(3)
-
-corr_df <- data.frame(corr_matrix)
-
-colnames(corr_df) <- "R" 
-
-row.names(corr_df) <- colnames(zeolite_numeric)
-
-df_corr <- corr_df['R'] 
+(df_merged <- merge(pvalue_df, corr_df, by = 0)  %>% mutate(abs_R=abs(R)) %>% column_to_rownames("Row.names")) %>% arrange(desc(abs_R))
 
 
-df_merged <- merge(df_pvalue, df_corr, by = 0)
+sel_cond <- c("C_0", "oil_adsorbent_ratio",  "Temp", "Capacity")
+sel_prop <- c("SA", "Vmicro", "Vmeso", "pore_size", "Si_Al", "Na",  "Ag","Ce","Cu", "Ni","Cs")
 
-colnames(df_merged)[1:2] <- c("Variable", "p_value")
+df_merged[sel_cond,] %>% arrange(desc(abs_R))
+                                 
+df_merged[sel_prop,] %>% arrange(desc(abs_R))
 
-df_merged %>% arrange(R)
+#Vmicro,C_0,Si_Al
+#
+
+################################################################################
 
 
 
