@@ -6,10 +6,13 @@ library(ggpmisc)
 
 model_performance <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/RF_model_performance.tsv", header = T)
 
+setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML/plots/model_performance")
+
 head(model_performance)
 lm_fit =  lm(y_pred ~ y_test, data = model_performance)
 
 summary(lm_fit)
+par(mfrow=(2,2))
 
 plot(lm_fit, 
      which  = 1, 
