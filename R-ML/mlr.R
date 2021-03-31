@@ -16,9 +16,9 @@ zeolite_df <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-M
 dim(zeolite_df)
 
 #reference dataset for numerical columns
-zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
-ref_numeric <- zeolite_ref %>% select_if(is.numeric)
-numuric_cols <- colnames(ref_numeric)
+# zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
+# ref_numeric <- zeolite_ref %>% select_if(is.numeric)
+# numuric_cols <- colnames(ref_numeric)
 #zeolite_df <-  zeolite_df %>% dplyr::select(!!num_cols)
 
 #Check how this standardisation affects the encoded variables 
@@ -37,9 +37,16 @@ setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/multiple")
 
 dim(zeolite)
 
+
 model1 <- lm(Capacity ~ . , data = zeolite)
 
-summary(model1)
+init_fit <-  tidy(model1) %>% column_to_rownames("term")  %>% arrange(p.value)
+
+init_fit
+
+nrow(init_fit)
+
+
 #residuals vs fitted
 #https://online.stat.psu.edu/stat462/node/117/
 #https://www.scribbr.com/statistics/multiple-linear-regression/
