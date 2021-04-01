@@ -180,10 +180,20 @@ model_table <- model_table %>% arrange(p.value)
 print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.tex")
 
 ################################################################################
-setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+#setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+
+zeolite <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
+
+zeolite_ref <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
+
+units_df <-  read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_units.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
+ref_numeric <- zeolite_ref %>% select_if(is.numeric)
 
 
-zeolite <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
+
+
+
 ref_numeric <- zeolite_ref %>% select_if(is.numeric)
 numeric_cols <- colnames(ref_numeric)
 
@@ -207,7 +217,7 @@ plot_scatterlm <- function(col_var, data, units_df){
     geom_smooth(method = "lm", size = 2, formula = y ~ x, colour = "red") +      
     stat_poly_eq(formula = y ~ x, 
                  aes(label =  paste(stat(rr.label), stat(p.value.label), sep = "*\", \"*")), 
-                 size = 3, parse = TRUE, label.y = "top", label.x = "right") +
+                 size = 6, parse = TRUE, label.y = "top", label.x = "left") +
     coord_cartesian(clip = 'off') +
     theme(panel.grid.minor = element_blank(),
           plot.margin = margin(0.25, 0.3, 0.25, 0.3, "cm"),
@@ -224,5 +234,5 @@ plot_scatterlm <- function(col_var, data, units_df){
 
 lapply(colnames(zeolite_numx), plot_scatterlm,  data = zeolite_numx, units_df = units_df)
 
-plot_scatterlm("SA", data = zeolite_numx, units_df = units_df)
+#plot_scatterlm("SA", data = zeolite_numx, units_df = units_df)
 

@@ -1,5 +1,7 @@
 library(ggsci)
 library(dplyr)
+library(dplyr)
+library(ggpubr)
 library(ggplot2)
 library(ggrepel)
 library(tidyverse)
@@ -200,15 +202,40 @@ ggplot(zeolite_main_conditions, aes(x = 2,  y = perc,  fill = features)) +
        scale_fill_igv()
 
 ggsave("zeolite_main_condi.pdf")
+
+
 ##########################################################################################################
-properties_main_perc = zeolite_main_prop$perc[zeolite_main_prop$features ==  "zeolite_properties"]
+
+struct_perc <- zeolite_main_prop$lab_perc[zeolite_main_prop$features == "structure"]
+
+units_df <-  read.table("/home/drewx/Documents/Project-Roger-Dodger/R-ML/zeolites_units.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
+
+Fullname <- t(units_df)
+
+structx <- zeolite_properties_varimp %>%
+                     arrange(desc(importance)) %>%
+                     mutate(perc = importance/sum(importance) * 100) %>%
+                     mutate(lab_perc = round((perc/100) * struct_perc ,1)) %>%
+                     mutate(lab_pos = cumsum(perc) - 0.5* perc) %>%
+                     column_to_rownames("features")
+
+str_framework <- merge(Fullname, structx, by = 0)
+
+str_framework$Fullname
 
 
-zeolite_properties_varimp %>%
-          arrange(desc(importance)) %>%
-          mutate(perc = importance/sum(importance) * 100) %>%
-          mutate(lab_perc = round((perc/100) * properties_perc ,1)) %>%
-          mutate(lab_pos = cumsum(perc) - 0.5* perc)
+ggbarplot(str_framework, 
+          x = "Fullname", 
+          y = "lab_perc",
+          fill = "Row.names",
+          order = str_framework$Fullname,
+          color = "white",            
+          palette = "jco",            
+          sort.val = "desc", 
+          rotate = TRUE, 
+          x.text.angle = 90           
+)
+
 
 
 
