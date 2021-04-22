@@ -45,7 +45,7 @@ def RunBruteForce(X_train,
                   min_trees =  1,
                   max_trees =  1000,
                   trees_step = 1,
-                  n_jobs  = 10):
+                  n_jobs  = 16):
 
 
     random_string = secrets.token_hex(nbytes=4)
