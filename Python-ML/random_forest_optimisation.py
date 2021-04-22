@@ -58,10 +58,10 @@ def RunBruteForce(X_train,
     #https://www.dataquest.io/blog/understanding-regression-error-metrics/
     header = "n_feat\tn_trees\tmae\tmse\trmse\tmape\tr2"
     print(header, file = outfile_obj)
-    print(header)
+    #print(header)
     for n_feat  in range(1, n_features + 1):
        print(file = outfile_obj)
-       print()
+       #print()
        for n_trees in range(min_trees,  max_trees+trees_step,  trees_step):
            #print(n_feat, n_trees)
            regressor = RandomForestRegressor(n_estimators=n_trees, max_features = n_feat, n_jobs = n_jobs )
@@ -75,7 +75,7 @@ def RunBruteForce(X_train,
            data = "{}\t{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(n_feat,n_trees, mae, mse, rmse, mape, r2)
            print(data, file = outfile_obj)
            outfile_obj.flush()
-           print(data)
+           #print(data)
 
     outfile_obj.close()
 
