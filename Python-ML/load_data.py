@@ -99,7 +99,7 @@ class GetZeoliteTsv(object):
         #https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
 
         categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' and col in self.zeolite_df.columns ] 
-        encoded_categories = [ pd.get_dummies(self.zeolite_df[col], drop_first = True) for col in categories ]
+        encoded_categories = [ pd.get_dummies(self.zeolite_df[col]) for col in categories ]
         
         zeolite_dropped = self.zeolite_df.drop(categories, axis= 1)
         self.zeolite_df = pd.concat( [zeolite_dropped] + encoded_categories, axis=1)
