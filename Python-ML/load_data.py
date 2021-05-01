@@ -98,8 +98,13 @@ class GetZeoliteTsv(object):
         #convert the categorical variables to intergers also known as one-hot-encoding
         #https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
 
-        categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' and col in self.zeolite_df.columns ] 
+        categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' and col in self.zeolite_df.columns ]
+
+        #categories = ["m1", "m2","m3"]
+        
         encoded_categories = [ pd.get_dummies(self.zeolite_df[col]) for col in categories ]
+        
+        print(encoded_categories)
         
         zeolite_dropped = self.zeolite_df.drop(categories, axis= 1)
         self.zeolite_df = pd.concat( [zeolite_dropped] + encoded_categories, axis=1)
