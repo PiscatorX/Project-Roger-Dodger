@@ -13,4 +13,4 @@ set xlabel "Number of trees" font "Helvetica, 12" offset 0,1
 set ylabel "Number of features" font "Helvetica, 12" offset 1.5,0 
 set key on outside top title "RMSE"  
 set output "RF_hyperparams_RMSE.pdf"
-splot "RF_optimisation.friday.cluster" using 2:1:5  notitle with lines 
+splot "RF_optimisation_saturday.dat" using 2:1:5  notitle with lines 
