@@ -11,6 +11,7 @@ library(relimp)
 library(magrittr)
 library(relaimpo)
 library(stringr)
+library(tidyr)
 
 #import the preprocessed and variable encoded data file
 zeolite_df <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
@@ -18,7 +19,7 @@ zeolite_df <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-M
 dim(zeolite_df)
 
 #reference dataset for numerical columns
-zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
+zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites database catagories V 2.txt", sep ="\t", header = T)
 # ref_numeric <- zeolite_ref %>% select_if(is.numeric)
 # numuric_cols <- colnames(ref_numeric)
 #zeolite_df <-  zeolite_df %>% dplyr::select(!!num_cols)
@@ -139,6 +140,33 @@ dim(best_model_zeolite)
   
 fit2 <- lm(Capacity ~ . , data = best_model_zeolite )
 
+
+(best_model_metrics <-  tidy(fit2) %>% 
+                       arrange(desc(estimate)) %>% 
+                       data.frame() %>%
+                       column_to_rownames(var = "term"))
+  
+dim(best_model_metrics)
+
+full_names <-  t(read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T))
+
+model_table_MLR   <-   merge(x = best_model_metrics, y = full_names, by = 0, all.x = T) %>% 
+                       data.frame(stringsAsFactors = F)
+
+
+model_table_MLR$Fullname <- as.character(model_table_MLR$Fullname)   
+
+model_table_MLR[is.na(model_table_MLR$Fullname),]$Fullname <- model_table_MLR[is.na(model_table_MLR$Fullname),]$Row.names
+                                                              
+model_table_MLR <- model_table_MLR %>%
+                    dplyr::select(Fullname, estimate, std.error, statistic, p.value) %>%
+                    arrange(desc(estimate))
+          
+          
+
+################################ Relative importance ###########################
+
+
 rel_importanceW <- relweights(fit2)
 
 rel_impoX <- rel_importanceW %>%
@@ -147,21 +175,35 @@ rel_impoX <- rel_importanceW %>%
 
 ################################################################################
 
-units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites_units.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
+units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
 full_names  <- t(units_df) %>%
                data.frame( stringsAsFactors = FALSE) %>%
                rownames_to_column(var = "symbol")
 
 
-zeo_prop <- cbind(c("SA","Vmicro","Vmeso","pore_size","Si_Al"),
-                         c("Na","Ag","Ce","Cu","Ni","Zn","Cs"),
-                          c("C_0","oil_adsorbent_ratio","Temp")) %>%
-                     data.frame() %>%
-                     magrittr::set_names(c("Zeolite properties","Metal ion","Prcess condition")) 
+
+
+adsobernt_properties = c('SA', 'Vmicro', 'Vmeso', 'pore_size', 'Si_Al') 
+metal_properties     = c('m1', 'm2', 'm3', 'C1', 'C2', 'C3', 'x1', 'x2', 'x3', 'Ri1', 'Ri2', 'Ri3')
+adsorbate_property   = c('adsorbate', 'dipole_moment', 'chemical_hardness', 'kinetic_diameter') 
+conditions           =  c('C_0', 'solvent', 'oil_adsorbent_ratio', 'Temp')
+
+zeo_prop  <-     cbind( c('SA', 'Vmicro', 'Vmeso', 'pore_size', 'Si_Al'),
+                 c('C1', 'C2', 'C3', 'x1', 'x2', 'x3', 'Ri1', 'Ri2', 'Ri3'),
+                 c('dipole_moment', 'chemical_hardness', 'kinetic_diameter'),
+                 c('C_0', 'oil_adsorbent_ratio', 'Temp')) %>%
+                 data.frame(stringsAsFactors = F) %>%
+                 magrittr::set_names(c("Adsorbent property","Metal property","Adsorbate property","Process condition"))
+
+
+# zeo_prop <- cbind(c("SA","Vmicro","Vmeso","pore_size","Si_Al"),
+#                          c("Na","Ag","Ce","Cu","Ni","Zn","Cs"),
+#                           c("C_0","oil_adsorbent_ratio","Temp")) %>%
+#                      data.frame() %>%
+#                      magrittr::set_names(c("Zeolite properties","Metal ion","Prcess condition")) 
                                      
 zeo_prop
 
-                     
 zeo_cat <-  zeolite_ref %>% select_if(Negate(is.numeric))
 zeo_cat <- zeo_cat[colSums(!(is.na(zeo_cat))) > 0]
 colnames(zeo_cat)[2] <- "Adsorbate"
@@ -205,164 +247,35 @@ rel_impoX <- rel_impoX %>%
            stringr::str_replace("\\.","-"))  
 
 
-rel_impoX$group[rel_impoX$Predictor == "HFAU-5"] <- "Adsorbent"
-rel_impoX$group[rel_impoX$Predictor == NA ] <- "Solvent"
+#rel_impoX$group[rel_impoX$Predictor == "HFAU-5"] <- "Adsorbent"
+#rel_impoX$group[rel_impoX$Predictor == NA ] <- "Solvent"
 
-
-# ggdotchart(dfm, x = "name", y = "mpg",
-#            color = "cyl",                                # Color by groups
-#            sorting = "ascending",                        # Sort value in descending order
-#            add = "segments",                             # Add segments from y = 0 to dots
-#            ggtheme = theme_pubr()                        # ggplot2 theme
-# )
-# 
-# 
-# 
-# 
-# 
-# ################################################################################
-# 
-# 
-# summary(fit2)
-# 
-# par(mfrow=c(2,2))
-# 
-# pdf("lm_diag_post_stepAIC.pdf")
-# 
-# plot(fit2)
-# 
-# dev.off()
-# 
-# sigma(fit2)/mean(best_model_zeolite$Capacity)
-# 
-# confint(fit2) 
-# 
-# metrics <- augment(fit2)
-# 
-# best_fit_metrics <-  tidy(fit2) %>% column_to_rownames("term")  %>% arrange(desc(estimate)) %>% round(6)
-# 
-# best_fit
-# 
-# 
-# 
-# relImportance <- calc.relimp(fit2)
-# #relImportance <- calc.relimp(fit2, type = "lmg", rela = TRUE)
-# 
-# 
-# 
-# print(relImportance)
-# 
-# print(xtable(best_fit2, digits=5, type = "latex"), file = "beest_fit_mlr_numeric.tex")
-# 
-# write.table(best_fit2, "best_fit2_numeric.tsv", sep ="\t", quote = F)
-# 
-# model_statistics <- glance(fit2)
-# getwd()
-# 
-# write.table(model_statistics,"mlr_statics_numeric.tsv", sep ="\t", row.names = F, quote = F)
-# 
-# ##########################################################################################
-# 
-# lm_metrics <- augment(lm_fit) %>% data.frame()
-# lm_stats <- tidy(lm_fit)
-# 
-# #plot pairwise regression
-# #visualise the distrubution of points around fitted line
-# print(">>>Regression line with residuals")
-# ggplot(lm_metrics, aes_string(x = term, y = response_var)) +
-#   geom_point(size = 1.5) + 
-#   geom_smooth(method = "lm", se = FALSE, size = 1, formula = y ~ x) +      
-#   geom_segment(aes_string(xend = term, yend = ".fitted"), color = "red", size = 0.5) +
-#   stat_poly_eq(formula = y ~ x, 
-#                aes(label =  paste(stat(rr.label), stat(p.value.label), sep = "*\", \"*")), 
-#                size = 3, parse = TRUE, label.y = "top", label.x = "right") +
-#   theme(panel.grid.minor = element_blank(),
-#         panel.background = element_blank(),
-#         axis.text = element_text(size=30, colour = "black"),
-#         axis.title = element_text(size=30, colour = "black"),
-#         panel.border = element_rect(colour = "black", fill=NA, size=1))
-# 
-# res_fname = paste0(term,  "_pw_regres.pdf")
-# ggsave(res_fname)
-# 
-# if (length(dev.list()!=0)) {dev.off()}
-# 
-# #Save model statistic
-# model_data <- glance(lm_fit) %>% dplyr::select(r.squared, statistic, p.value)
-# model_data <- cbind(term, model_data)
-# model_entries <- rbind(model_entries, model_data)
-# print(model_entries)
-# 
-# summary(model2)
-# 
-# shapiro.test(resid(model2)) 
-# 
-# plot(model2, 1)
-# 
-# plot(model2, 2)
-# 
-# plot(model2, 3)
-# 
-# plot(model2, 4)
-# 
-# plot(model2, 5)
-# 
-# 
-# mlr2 <- tidy(model2) %>% arrange(p.value) %>% data.frame()
-# 
-# mlr2
-# 
-# m1r2_sig <- mlr2 %>% column_to_rownames("term") %>%
-#             round(6) %>%
-#             arrange(p.value)
-# 
-# 
-# 
-# mlr_df <- mlr %>% column_to_rownames("term") %>%
-#   round(6) %>%
-#   arrange(p.value)
-# 
-# write.table(mlr_df, "multiple_regress.tsv", sep = "\t", quote = F)
-# 
-# 
-# m1r1_sig <- mlr[mlr$term %in% colnames(zeolite_ref),] %>% 
-#   data.frame() %>%
-#   filter(p.value <= 0.05) %>%
-#   column_to_rownames("term") %>%
-#   round(7)
-# 
-# print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.tex")
-
-################################################################################
-#Numeric data only
-# Residual standard error: 0.5782 on 293 degrees of freedom
-# Multiple R-squared:  0.6496,	Adjusted R-squared:  0.6389 
-# F-statistic: 60.36 on 9 and 293 DF,  p-value: < 2.2e-16
-# Ce           0.727957  0.048780  14.923348 0.000000
-# C_0          0.369518  0.034391  10.744579 0.000000
-# pore_size    0.276053  0.078893   3.499075 0.000539
-# Vmicro       0.167634  0.050310   3.332041 0.000973
-# Ag           0.069534  0.035005   1.986378 0.047923
-# (Intercept) -0.021414  0.033437  -0.640429 0.522394
-# Si_Al       -0.133975  0.042450  -3.156090 0.001765
-# Vmeso       -0.179864  0.037378  -4.811987 0.000002
-# Temp        -0.262532  0.042672  -6.152267 0.000000
-# Cu          -0.559248  0.053833 -10.388637 0.000000
+rel_impoX$group  <- factor(rel_impoX$group,   levels = unique(rel_impoX$group))
 
 
 
 
-################################################################################
-# data(swiss)
-# 
-# fit_test <- lm(Fertility ~ .,data = swiss)
-# 
-# summary(fit_test)
-# 
-# 
-# (relImportnc <- calc.relimp(formula = Capacity ~ ., data = best_model_zeolite, type = "lmg", rela = TRUE))
-# 
-# (relImportnc <- calc.relimp(formula = Fertility ~ ., data = swiss, type = "lmg", rela = TRUE))
-# 
-# install.packages(parallel)
+ggbarplot(rel_impoX, x = "Predictor", y = "Weights",
+          fill = "group", 
+          xlab = "Variable",
+          ylab=expression(paste('Relative importance (% of R'^2,')')),
+          color = "white",            
+          palette = "d3",            
+          sort.val = "desc",           
+          sort.by.groups = TRUE,
+          x.text.angle = 90, 
+          ggtheme = theme(panel.grid.minor = element_blank(),
+               panel.background = element_blank(),
+               axis.text.y = element_text(size=16, colour = "black"),
+               axis.text.x = element_text(size=16, colour = "black", vjust = 0.5),
+               axis.title = element_text(size=16, colour = "black"),
+               legend.title = element_text(size = 16),
+               legend.text = element_text(size = 16),
+               panel.border = element_rect(colour = "black", fill=NA, size=1))
+          ) + labs(fill = "Variable type")
 
+          
+ggsave("mlr_variable_importance.pdf")
+
+          
+          

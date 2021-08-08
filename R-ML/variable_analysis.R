@@ -5,6 +5,7 @@ library(broom)
 library(xtable)
 library(ggpmisc)
 library(dplyr)
+library(magrittr)
 library(reshape2)
 
 
@@ -13,7 +14,7 @@ library(reshape2)
 zeolite_df <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
 zeolite_df_nounits <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/ZeoX_Final_encoded.tsv", sep ="\t", header = T)
 
-zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
+zeolite_ref <- read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolites_ref2x.tsv", sep ="\t", header = T)
 units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_units.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
 ref_numeric <- zeolite_ref %>% select_if(is.numeric)
 
@@ -21,13 +22,17 @@ dim(zeolite_df)
 
 install_symbolic_unit("ratio")
 install_symbolic_unit("mgS")
+install_symbolic_unit("D")
+install_symbolic_unit("ev")
+
 
 #This assigns units to the variables and makes for a nice 
 for (col in names(ref_numeric)){
   
   units(zeolite_df[,col]) <- units_df["Units", col]
   
-} 
+}
+
 
 head(zeolite_df)
 
@@ -60,7 +65,8 @@ plot_ggdensity <- function(col_var, data, units_df){
 }
 
 
-lapply(colnames(ref_numeric), plot_ggdensity,  data = zeolite_df, units_df = units_df)
+#lapply(colnames(ref_numeric), plot_ggdensity,  data = zeolite_df, units_df = units_df)
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/simple")
 ############################ simple linear regression ##########################
 zeo_dat <- ref_numeric %>%
   dplyr::select(-Capacity)
@@ -71,13 +77,30 @@ simple_lr <- function(term, response_var = "Capacity",  data = zeolite_df_nounit
     print(term)
     fmla = as.formula(paste(response_var, term,  sep = " ~ ")) 
     lm_fit =  lm(fmla, data = data)
-    shapiro.test(resid(lm_fit))
-  
+    res <- shapiro.test(resid(lm_fit))
+    res$variable <- term
+    
+  return(res)
 }
 
 
-lapply(colnames(zeo_dat), simple_lr)
+dfs <- lapply(colnames(zeo_dat), simple_lr) 
 
+dfx <- do.call( rbind, dfs) %>% 
+       data.frame() %>%
+       select(variable, statistic, p.value)
+
+
+units_df <-  read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
+
+Fullname <- t(units_df) %>% 
+            data.frame() %>%
+            rownames_to_column(var = "variable")
+
+dfx_fname <-  merge(Fullname, dfx)  %>%
+              select(Fullname, statistic, p.value)
+
+print(xtable(dfx_fname, digits=7, type = "latex"), file = "dfx.tex")
 
 
 
@@ -177,21 +200,56 @@ for (col in colnames(ref_numeric)){
 }
 
 model_table <- model_table %>% arrange(p.value)
+
+colnames(zeolite_df)
+
+rownames(model_table) <- model_table$term
+
+full_names <-  t(read.table("C:/Users/DrewX/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_names.txt", na.strings = "", row.names = 1, sep ="\t", stringsAsFactors = F, header = T))
+
+model_table <- merge(full_names, model_table, by = 0, all = T) %>% 
+               data.frame() %>%
+               dplyr::select(Fullname, r.squared, statistic, p.value) %>%
+               arrange(desc(r.squared))
+
 print(xtable(model_table, digits=5, type = "latex"), file = "Zeolite_PW_models.tex")
 
-################################################################################
-#setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
-setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+#########################################################################################################################
+setwd("C:/Users/DrewX/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
+#setwd("/home/drewx/Documents/Project-Roger-Dodger/R-ML/plots/corrplot")
 
-zeolite <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolites database one febl14.txt", sep ="\t", header = T)
+zeolite <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/", sep ="\t", header = T)
 
 zeolite_ref <- read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolite_ref.txt", sep ="\t", header = T)
 
 units_df <-  read.table("/home/drewx/Documents/Project-Roger-Dodger/Python-ML/zeolitesfeb10_units.txt", row.names = 1, sep ="\t", stringsAsFactors = F, header = T)
+
 ref_numeric <- zeolite_ref %>% select_if(is.numeric)
 
 
+colnames(ref_numeric)
 
+adsobernt_properties = c('SA', 'Vmicro', 'Vmeso', 'pore_size', 'Si_Al') 
+metal_properties     = c('m1', 'm2', 'm3', 'C1', 'C2', 'C3', 'x1', 'x2', 'x3', 'Ri1', 'Ri2', 'Ri3')
+adsorbate_property   = c('adsorbate', 'dipole_moment', 'chemical_hardness', 'kinetic_diameter') 
+conditions           =  c('C_0', 'solvent', 'oil_adsorbent_ratio', 'Temp')
+
+
+
+model_table %>%
+       arrange(desc(r.squared))
+
+model_table[model_table$term %in% adsobernt_properties,] %>%
+                                  arrange(desc(r.squared))
+
+model_table[model_table$term %in% metal_properties,] %>%
+                                 arrange(desc(r.squared))
+
+model_table[model_table$term %in% adsorbate_property,] %>%
+                              arrange(desc(r.squared))
+
+model_table[model_table$term %in% conditions,] %>%
+                          arrange(desc(r.squared))
 
 
 ref_numeric <- zeolite_ref %>% select_if(is.numeric)
@@ -234,5 +292,5 @@ plot_scatterlm <- function(col_var, data, units_df){
 
 lapply(colnames(zeolite_numx), plot_scatterlm,  data = zeolite_numx, units_df = units_df)
 
-#plot_scatterlm("SA", data = zeolite_numx, units_df = units_df)
+plot_scatterlm("SA", data = zeolite_numx, units_df = units_df)
 

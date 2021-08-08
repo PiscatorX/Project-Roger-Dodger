@@ -21,7 +21,7 @@ class GetZeoliteTsv(object):
         
         #print(self.zeolite_df.columns)
         
-        self.float_cols = self.zeolite_df.select_dtypes(include=['float64']).columns
+        self.float_cols = self.zeolite_df.select_dtypes(include=['float64','int64']).columns
         self.zeolite_df.dropna(inplace=True, how = 'all')
         self.df_dtypes = { col: 'category' for col in self.zeolite_df.columns if col not in self.float_cols }
         
@@ -98,8 +98,13 @@ class GetZeoliteTsv(object):
         #convert the categorical variables to intergers also known as one-hot-encoding
         #https://towardsdatascience.com/the-dummys-guide-to-creating-dummy-variables-f21faddb1d40
 
-        categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' ] 
-        encoded_categories = [ pd.get_dummies(self.zeolite_df[col], drop_first = True) for col in categories ]
+        categories = [ col for col,dtype in self.df_dtypes.items() if dtype == 'category' and col in self.zeolite_df.columns ]
+
+        #categories = ["m1", "m2","m3"]
+        
+        encoded_categories = [ pd.get_dummies(self.zeolite_df[col]) for col in categories ]
+        
+        print(encoded_categories)
         
         zeolite_dropped = self.zeolite_df.drop(categories, axis= 1)
         self.zeolite_df = pd.concat( [zeolite_dropped] + encoded_categories, axis=1)
@@ -116,29 +121,26 @@ if  __name__  == '__main__':
     parser = argparse.ArgumentParser()
     
     parser.add_argument('zeolite_file', help ="sequence file", type=argparse.FileType('r'))
-    parser.add_argument('-o','--outfile', default = "ZeoX_Final_encoded.tsv", required = False)
+    parser.add_argument('-o','--outfile', default = "ZeoX_Final_encoded_V2x.tsv", required = False)
     args = parser.parse_args()
     getZeo = GetZeoliteTsv(args.zeolite_file)
     getZeo.set_dtypes()
     getZeo.missingness("ZeoX_Final_encoded.miss")
-    getZeo.GroupMeanImputation('Adsorbent','SA')
-    getZeo.MeanImputation('SA')
-    getZeo.GroupMeanImputation('Adsorbent','Vmicro')
+    #getZeo.GroupMeanImputation('Adsorbent','Vmicro')
     getZeo.MeanImputation('Vmicro')
     getZeo.GroupMeanImputation('Adsorbent','Vmeso')
     getZeo.MeanImputation('Vmeso')
     getZeo.GroupMeanImputation('Adsorbent','pore_size')
     getZeo.MeanImputation('pore_size')
-    getZeo.GroupMeanImputation('Adsorbent','pore_size')
-    getZeo.MeanImputation('pore_size')
-    getZeo.GroupMeanImputation('Adsorbent','Si_Al')
-    getZeo.MeanImputation('Si_Al')
-    
-    for metal in ['Na', 'Ag', 'Ce', 'Cu', 'Ni', 'Zn', 'Fe2', 'La', 'Cs', 'Pd', 'Nd']:
-         getZeo.zerofill(metal)
-        
-    for var in ["C_0","oil_adsorbent_ratio","Temp"]:
-         getZeo.MeanImputation(var)
-
+         
     getZeo.encode_categorical()
+    
+    for metal in ['Na+','Ag+', 'Cu+', 'Ce+4', 'Cs+2', 'Ni+2', 'x_Na+', 'x_Ag+', 'x_Cu+','x_Ce+4', 'x_Cs+2', 'x_Ni+2', 'R_Na+', 'R_Ag+', 'R_Cu+', 'R_Ce+4','R_Cs+2', 'R_Ni+2']:
+       getZeo.zerofill(metal)
+
+    
+    #for metal in ['C1', 'C2', 'C3', 'x1', 'x2', 'x3', 'Ri1', 'Ri2', 'Ri3']:
+    #   getZeo.zerofill(metal)
+       
+  
     getZeo.save_zeo(args.outfile)
